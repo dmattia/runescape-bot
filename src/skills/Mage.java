@@ -16,6 +16,7 @@ public class Mage {
 
     public static Activity stringAndEnchant() {
         Activity getStringsAndAmulets = Activity.newBuilder()
+                .withName("Getting supplies")
                 .addPreReq(() -> !Inventory.contains("Topaz amulet (u)", "Topaz amulet"))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(Activities.withdraw("Cosmic rune", 13))
@@ -26,6 +27,7 @@ public class Mage {
                 .build();
 
         Activity makeAmulets = Activity.newBuilder()
+                .withName("Making amulets")
                 .addPreReq(() -> Inventory.contains("Topaz amulet (u)"))
                 .addPreReq(() -> Inventory.contains("Ball of wool"))
                 .addSubActivity(Activities.use("Topaz amulet (u)", "Ball of wool"))
@@ -34,6 +36,7 @@ public class Mage {
                 .build();
 
         return Activity.newBuilder()
+                .withName("String/Enchant amulets")
                 .addSubActivity(getStringsAndAmulets)
                 .addSubActivity(makeAmulets)
                 .addSubActivity(castOn(Spell.Modern.LEVEL_3_ENCHANT, "Topaz amulet"))
@@ -43,6 +46,7 @@ public class Mage {
 
     public static Activity castOn(Spell spell, String inventoryItem) {
         return Activity.newBuilder()
+                .withName("Casting spell " + spell.toString() + " on "  + inventoryItem)
                 .addPreReq(() -> Inventory.contains(inventoryItem))
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.cast(Spell.Modern.LEVEL_3_ENCHANT))
@@ -58,6 +62,7 @@ public class Mage {
 
     private static Activity getAmulets() {
         return Activity.newBuilder()
+                .withName("Getting amulets from bank")
                 .addPreReq(() -> !Inventory.contains("Topaz amulet"))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(Activities.withdraw("Cosmic rune", 27))

@@ -20,6 +20,7 @@ public class Crafting {
     //TODO(dmattia): refactor
     public static Activity makeJewlery(Jewlery type) {
         Activity fetchMaterials = Activity.newBuilder()
+                .withName("Fetching materials")
                 .addPreReq(() -> !Inventory.contains(type.getBarName()))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(Activities.withdraw(type.getMouldName(), 1))
@@ -29,6 +30,7 @@ public class Crafting {
                 .build();
 
         return Activity.newBuilder()
+                .withName("Making " + type.getOutputName())
                 .addSubActivity(fetchMaterials)
                 .addSubActivity(Activities.moveTo(EDGEVILLE_FURNACE))
                 .addSubActivity(Activities.use(type.getBarName()))
@@ -41,6 +43,7 @@ public class Crafting {
 
     public static Activity goldBracelets() {
         return Activity.newBuilder()
+                .withName("Gold Bracelets")
 
                 .addSubActivity(getGoldBars())
                 .addSubActivity(Activities.moveTo(EDGEVILLE_FURNACE))
@@ -56,6 +59,7 @@ public class Crafting {
 
     private static Activity getGoldBars() {
         return Activity.newBuilder()
+                .withName("Getting gold bars")
                 .addPreReq(() -> !Inventory.contains("Gold bar"))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(Activities.withdraw("Bracelet mould", 1))
@@ -66,6 +70,7 @@ public class Crafting {
 
     private static Activity waitForProductionToStop(String itemProduced) {
         return Activity.newBuilder()
+                .withName("Producing " + itemProduced + " until complete or next level")
                 .addSubActivity(() -> {
                     AtomicBoolean complete = new AtomicBoolean(false);
                     SkillListener listener = event -> {

@@ -16,6 +16,7 @@ public class Cooking {
     // TODO(dmattia): have foodType + Location enum options
     public static Activity cookAtRogues(FoodType food) {
         return Activity.newBuilder()
+                .withName("Cooking food at Rouges Den")
                 .addSubActivity(getRawFood(food))
                 .addSubActivity(Activities.use(food.getPreCookedName()))
                 .addSubActivity(() -> SceneObjects.getNearest("Fire").interact("Use"))
@@ -27,6 +28,7 @@ public class Cooking {
 
     private static Activity getRawFood(FoodType food) {
         return Activity.newBuilder()
+                .withName("Getting food from bank")
                 .addPreReq(() -> !Inventory.contains(food.getPreCookedName()))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(Activities.withdraw(food.getPreCookedName(), 28))
@@ -38,6 +40,7 @@ public class Cooking {
     // TODO(dmattia): Refactor with crafting method by same name
     private static Activity waitForProductionToStop(FoodType food) {
         return Activity.newBuilder()
+                .withName("Waiting for food to cook, or for next level")
                 .addSubActivity(() -> {
                     AtomicBoolean complete = new AtomicBoolean(false);
                     SkillListener listener = event -> {

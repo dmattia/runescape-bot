@@ -65,22 +65,24 @@ public class Mining {
                 .addSubActivity(() -> Bank.depositInventory())
                 .addSubActivity(() -> Time.sleepUntil(Inventory::isEmpty, 3000))
                 .addSubActivity(() -> Bank.close())
-                .addSubActivity(() -> Tabs.open(Tab.INVENTORY))
-                .addSubActivity(() -> Time.sleepUntil(() -> Tabs.isOpen(Tab.INVENTORY), 1000))
-                .addSubActivity(() -> Activities.moveTo(rocks))
+                .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
+                .addSubActivity(Activities.moveTo(rocks))
                 .onlyOnce()
                 .build();
 
 
         return Activity.newBuilder()
+                .withName("Mining gems")
                 .addSubActivity(hopIfBusy)
                 .addSubActivity(mine)
                 .addSubActivity(bank)
                 .build();
     }
 
+    // TODO(dmattia): refactor
     public static Activity mineAndDrop(Rock rockType) {
         return Activity.newBuilder()
+                .withName("Mining and dropping some rocks")
                 .addPreReq(() -> !Inventory.isFull())
                 .addPreReq(() -> SceneObjects.getNearest(sceneObject -> {
                     return Arrays.equals(sceneObject.getDefinition().getNewColors(), rockType.getColors());

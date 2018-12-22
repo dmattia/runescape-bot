@@ -17,6 +17,7 @@ public class Thieving {
      */
     public static Activity teaStall() {
         return Activity.newBuilder()
+                .withName("Thieving from tea stall")
                 .addPreReq(() -> Skills.getCurrentLevel(Skill.THIEVING) > 5)
                 .addPreReq(() -> Skills.getCurrentLevel(Skill.THIEVING) < 25)
                 .addSubActivity(() -> Time.sleepUntil(() -> {
@@ -37,6 +38,7 @@ public class Thieving {
      */
     public static Activity fruitStall() {
         return Activity.newBuilder()
+                .withName("Thieving from fruit stall")
                 .addPreReq(() -> SceneObjects.getNearest("Fruit Stall") != null)
                 .addSubActivity(() -> {
                     int count = Inventory.getCount();

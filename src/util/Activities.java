@@ -40,6 +40,7 @@ public class Activities {
 
     public static Activity debug(Supplier<String> s) {
         return Activity.newBuilder()
+                .withName("Debugging")
                 .addSubActivity(() -> System.out.println("Debug: " + s.get()))
                 .onlyOnce()
                 .build();
@@ -56,6 +57,7 @@ public class Activities {
 
     public static Activity switchToTab(Tab tab) {
         return Activity.newBuilder()
+                .withName("Switching to tab: " + tab.toString())
                 .addPreReq(() -> !Tabs.isOpen(tab))
                 .addSubActivity(() -> Tabs.open(tab))
                 .addSubActivity(() -> Time.sleepUntil(() -> Tabs.isOpen(tab), 134, 1000))
@@ -77,6 +79,7 @@ public class Activities {
                 .build();
     }
 
+    // TODO(dmattia): This should not just call moveTo(Position), as the logic for being close is different
     public static Activity moveTo(Area area) {
         return moveTo(area.getCenter());
     }
@@ -84,13 +87,14 @@ public class Activities {
     public static Activity use(String name) {
         return Activity.newBuilder()
                 .withName("Using " + name)
-                .addSubActivity(use(item -> item.getName().equals(name)))
+                .addSubActivity(use(item -> item.getName().equalsIgnoreCase(name)))
                 .onlyOnce()
                 .build();
     }
 
     public static Activity use(Predicate<Item> predicate) {
         return Activity.newBuilder()
+                .withName("using item")
                 .addPreReq(() -> Inventory.contains(predicate))
                 .addSubActivity(() -> Inventory.getFirst(predicate).interact("Use"))
                 .addSubActivity(pauseFor(Duration.ofMillis(180)))
@@ -137,13 +141,14 @@ public class Activities {
                 .addSubActivity(
                         Activity.newBuilder()
                                 .withName("Opening world switcher")
-                                .addPreReq(() -> Interfaces.firstByAction(action -> action.equals("World Switcher")) != null)
-                                .addSubActivity(() -> Interfaces.firstByAction(action -> action.equals("World Switcher")).interact("World Switcher"))
+                                .addPreReq(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")) != null)
+                                .addSubActivity(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")).interact("World Switcher"))
                                 .addSubActivity(pauseFor(Duration.ofMillis(582)))
                                 .onlyOnce()
                                 .build()
                 )
-                .addSubActivity(() -> WorldHopper.randomHopInP2p())
+                //.addSubActivity(() -> WorldHopper.randomHopInP2p())
+                .addSubActivity(() -> WorldHopper.hopNext(Predicates::worldIsSafe))
                 .addSubActivity(() -> {
                     AtomicBoolean complete = new AtomicBoolean(false);
                     WorldChangeListener listener = event -> complete.set(true);
@@ -184,7 +189,7 @@ public class Activities {
                             SceneObjects.getNearest("Bank booth").interact("Bank");
                             break;
                         case NPC:
-                            Npcs.getNearest(bank.getName().replace("Emerald Benedicht", "Emerald Benedict")).interact("Bank");
+                            Npcs.getNearest(bank.getName()).interact("Bank");
                             break;
                         case BANK_CHEST:
                             SceneObjects.getNearest("Bank chest").interact("Use");
@@ -263,7 +268,7 @@ public class Activities {
                 .withName("Depositing all " + item)
                 .addPreReq(() -> Inventory.contains(item))
                 .addSubActivity(() -> Bank.depositAll(item))
-                .addSubActivity(pauseFor(Duration.ofMillis(300)))
+                .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains(item), 2000))
                 .onlyOnce()
                 .build()
                 .addPreActivity(openBank());
@@ -287,7 +292,7 @@ public class Activities {
                 .withName("Withdrawing " + amount + " of " + itemName)
                 .addPreReq(Bank::isOpen)
                 .addSubActivity(() -> Bank.withdraw(itemName, amount))
-                .addSubActivity(pauseFor(Duration.ofMillis(200)))
+                .addSubActivity(() -> Time.sleepUntil(() -> Inventory.getCount(true, itemName) >= amount, 2000))
                 .addSubActivity(() -> {
                     if (Inventory.getCount(true, itemName) < amount) Globals.script.setStopping(true);
                 })

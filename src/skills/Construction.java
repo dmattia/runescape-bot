@@ -32,7 +32,7 @@ public class Construction {
      * Layout: https://www.youtube.com/watch?v=M6K0qySeRQU
      *
      * Jewelery Box:
-     O   Basic: 75 + 6 http://oldschoolrunescape.wikia.com/wiki/Basic_jewellery_box
+     X   Basic: 75 + 6 http://oldschoolrunescape.wikia.com/wiki/Basic_jewellery_box
      O   Fancy: 78 + 8 http://oldschoolrunescape.wikia.com/wiki/Fancy_jewellery_box
      O   Ornate: 83 + 8 http://oldschoolrunescape.wikia.com/wiki/Ornate_jewellery_box
      *
@@ -42,13 +42,8 @@ public class Construction {
      O   Watchtower/Yanille: 58 mage + Watchtower
      *
      * Pools:
-     O   Run energy: 62 + 8
-     O   Prayer: 72 + 8
+     X   Prayer: 72 + 8
      O   hitpoints: 82 + 8
-     *
-     * Prayer:
-     x   Oak Burners: 61
-     O   Gilded Altar: 67 + 8
      *
      x Servant's moneybag: 58
      */
@@ -98,7 +93,6 @@ public class Construction {
                 .addSubActivity(() -> Activities.moveTo(SceneObjects.getNearest("Larder Space").getPosition()).run())
                 .addSubActivity(() -> SceneObjects.getNearest("Larder Space").interact("Build"))
                 .addSubActivity(() -> Time.sleepUntil(() -> Interfaces.isOpen(458), 444, 1000 * 10))
-                .addSubActivity(Activities.debug(() -> Boolean.toString(Interfaces.isOpen(458))))
                 .addSubActivity(() -> Interfaces.getComponent(458, 5).interact("Build"))
                 .addSubActivity(() -> Time.sleepUntil(() -> !Players.getLocal().isAnimating(), 222, 1000 * 5))
                 .onlyOnce()
@@ -144,10 +138,12 @@ public class Construction {
                 .addSubActivity(() -> Time.sleepWhile(House::isInside, 1211, 1000 * 10))
                 .build();
 
+
         return Activity.newBuilder()
+                .withName("Oak Larder Activity")
                 .addPreReq(() -> Skills.getCurrentLevel(Skill.CONSTRUCTION) >= 33)
-                //.addPreReq(() -> Inventory.getCount("Coins") > 120) // Unnoting fee for Phials
-                .addPreReq(() -> Inventory.getCount(true /* includeStacks */, "Oak Plank") > 24)
+                .addPreReq(() -> Inventory.getCount(true, "Coins") > 120) // Unnoting fee for Phials
+                .addPreReq(() -> Inventory.getCount(true, "Oak Plank") > 24)
                 .addSubActivity(makeLarders)
                 .addSubActivity(leaveHouse)
                 .addSubActivity(unnotePlanks)
@@ -156,21 +152,23 @@ public class Construction {
     }
 
     /**
-     * 244k per hour for WC, not bad :)
+     * 244k per hour for WC, not bad :)2
      */
     public static Activity cutAndMillOaks() {
+        Activity bank = Activity.newBuilder()
+                .withName("Banking oak planks")
+                .addPreReq(() -> Inventory.contains("Oak plank"))
+                .addSubActivity(Activities.moveTo(GUILD_BANK))
+                .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
+                .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 1000 * 4))
+                .addSubActivity(Activities.depositAll("Oak plank"))
+                .addSubActivity(Activities.closeBank())
+                .onlyOnce()
+                .build();
+
         return Activity.newBuilder()
-                .addSubActivity(
-                        Activity.newBuilder()
-                                .addPreReq(() -> Inventory.contains("Oak plank"))
-                                .addSubActivity(Activities.moveTo(GUILD_BANK))
-                                .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                                .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 1000 * 4))
-                                .addSubActivity(Activities.depositAll("Oak plank"))
-                                .addSubActivity(Activities.closeBank())
-                                .onlyOnce()
-                                .build()
-                )
+                .withName("Making Oak planks in Woodcut guild")
+                .addSubActivity(bank)
                 .addSubActivity(Woodcutting.cut(Woodcutting.Tree.OAK))
                 .addSubActivity(Activities.moveTo(GUILD_SAW_MILL))
                 .addSubActivity(() -> Npcs.getNearest("Sawmill operator").interact("Buy-Plank"))
@@ -181,6 +179,7 @@ public class Construction {
 
     public static Activity makeSawMillRun() {
         return Activity.newBuilder()
+                .withName("Varrock Sawmill running")
                 .addSubActivity(Activities.wearGraceful())
                 .addSubActivity(getLogs())
                 .addSubActivity(Activities.moveTo(VARROCK_SAW_MILL))
@@ -193,6 +192,7 @@ public class Construction {
 
     private static Activity makePlanks() {
         return Activity.newBuilder()
+                .withName("Making Planks from interface")
                 .addPreReq(() -> Interfaces.isOpen(403))
                 .addSubActivity(() -> Interfaces.getComponent(403, 108).interact(action -> true))
                 .addSubActivity(Activities.pauseFor(Duration.ofMillis(1500)))
@@ -205,6 +205,7 @@ public class Construction {
 
     private static Activity getLogs() {
         return Activity.newBuilder()
+                .withName("Getting Oak logs from bank")
                 .addPreReq(() -> !Inventory.contains("Oak logs"))
                 .addSubActivity(Activities.depositInventory())
                 .addSubActivity(() -> Bank.withdrawAll("coins"))

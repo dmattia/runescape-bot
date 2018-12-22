@@ -1,5 +1,7 @@
 package util.common;
 
+import org.rspeer.runetek.adapter.scene.Npc;
+import org.rspeer.runetek.adapter.scene.SceneObject;
 import org.rspeer.runetek.api.commons.StopWatch;
 import org.rspeer.runetek.api.commons.Time;
 import util.Globals;
@@ -9,6 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Activities are composable units of work that are set to automatically have anti-ban measures between tasks.
@@ -25,6 +29,7 @@ public class Activity implements Runnable {
     private final StopWatch stopWatch;
     private int iteration;
     private Optional<String> name;
+    private Optional<Activity> parent;
 
     // private because you should only create activities through Activity.newBuilder()...build().
     private Activity(List<BooleanSupplier> preConditions, List<Runnable> activities, Optional<String> name) {
@@ -33,6 +38,32 @@ public class Activity implements Runnable {
         this.stopWatch = StopWatch.start();
         this.iteration = 1;
         this.name = name;
+        this.parent = Optional.empty();
+
+        activities.stream()
+                .filter(Activity.class::isInstance)
+                .map(Activity.class::cast)
+                .map(child -> child.setParent(this));
+    }
+
+    private Activity setParent(Activity parent) {
+        this.parent = Optional.of(parent);
+        return this;
+    }
+
+    /**
+     * Returns the full name of this activity, which is the name of the current activity along with all parent activity
+     * names, separated by a space.
+     */
+    private Optional<String> getFullName() {
+        return this.name.map(name -> this.parent.flatMap(Activity::getFullName).map(s -> s + " : ").orElse("") + name);
+    }
+
+    /**
+     * Creates an activity that just performs a runnable
+     */
+    public static Activity of(Runnable runnable) {
+        return Activity.newBuilder().addSubActivity(runnable).build();
     }
 
     /**
@@ -52,7 +83,9 @@ public class Activity implements Runnable {
         iteration = 1;
 
         while (preConditions.stream().allMatch(BooleanSupplier::getAsBoolean)) {
-            if (name.isPresent() && iteration == 1) System.out.println("Starting activity: " + name.get());
+            if (getFullName().isPresent() && iteration == 1) {
+                System.out.println("Current Activity : " + getFullName().get());
+            }
 
             activities.stream().forEach(runnable -> {
                 runnable.run();
@@ -112,17 +145,6 @@ public class Activity implements Runnable {
             activity.preConditions.add(() -> !Globals.script.isPaused());
             activity.preConditions.add(() -> !Globals.script.isStopping());
 
-            // Update sub-activities so that their names contain the parent names. This gives better logging context.
-            // TODO(dmattia): This should be recursive to handle `andThens` and other composing methods
-            if (activity.name.isPresent()) {
-                activity.activities.stream()
-                        .filter(runnable -> Activity.class.isInstance(runnable))
-                        .map(runnable -> Activity.class.cast(runnable))
-                        .forEach(child -> {
-                            child.name = child.name.map(childName -> activity.name.get() + " : " + childName);
-                        });
-            }
-
             return activity;
         }
 
@@ -135,6 +157,9 @@ public class Activity implements Runnable {
             return this;
         }
 
+        /**
+         * Adds a name to this activity, just used for logging and optional to include.
+         */
         public Builder withName(String name) {
             this.name = Optional.of(name);
             return this;
@@ -170,6 +195,9 @@ public class Activity implements Runnable {
             return this;
         }
 
+        /**
+         * Continues to repeat this activity until some other precondition fails.
+         */
         public Builder untilPreconditionsFail() {
             return maximumTimes(Integer.MAX_VALUE);
         }

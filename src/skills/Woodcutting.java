@@ -16,6 +16,7 @@ public class Woodcutting {
      */
     public static Activity cut(Tree tree) {
         return Activity.newBuilder()
+                .withName("Cutting tree: " + tree.getTree())
                 .addPreReq(() -> !Inventory.isFull())
                 .addSubActivity(Activities.moveTo(tree.getLocation()))
                 .addPreReq(() -> SceneObjects.getNearest(tree.getTree()) != null)
@@ -50,37 +51,4 @@ public class Woodcutting {
             return tree;
         }
     }
-
-
-
-
-         /*
-        Activity.newBuilder()
-                // walk to trees
-                .addSubActivity(SubActivity.newBuilder()
-                        .onlyIf(() -> Locations.WILLOW_TREES.distance(Players.getLocal()) > 10)
-                        .setJob(() -> Movement.walkToRandomized(Locations.WILLOW_TREES))
-                        .betweenJobs(() -> Time.sleepWhile(Movement::isDestinationSet, 1000 * 5))
-                        .continueWhile(() -> Locations.WILLOW_TREES.distance(Players.getLocal()) > 5)
-                        .build())
-                // fill inventory with logs
-                .addSubActivity(SubActivity.newBuilder()
-                        .onlyIf(() -> !Inventory.isFull())
-                        .setJob(() -> SceneObjects.getNearest("Willow").interact("Chop down"))
-                        .betweenJobs(() -> Time.sleepWhile(() -> Players.getLocal().isAnimating(), 1000 * 60 * 5))
-                        .stopWhen(Inventory::isFull)
-                        .build())
-                // make arrow shafts
-                .addSubActivity(SubActivity.newBuilder()
-                        .setJob(() -> {
-                            use(KNIFE, WILLOW_LOG);
-                            Time.sleepUntil(Production::isOpen, 2000);
-                            Production.initiate(ARROW_SHAFT);
-                            Production.initiate();
-                        })
-                        .thenWaitUntil(() -> !Players.getLocal().isAnimating() && !Inventory.contains(WILLOW_LOG))
-                        .build())
-                .build()
-                .perform();
-        */
 }

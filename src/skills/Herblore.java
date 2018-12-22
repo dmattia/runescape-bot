@@ -8,6 +8,7 @@ import util.common.Activity;
 public class Herblore {
     public static Activity cleanHerbs() {
         return Activity.newBuilder()
+                .withName("Cleaning some ranarr")
                 .addSubActivity(Activities.withdrawEqualOf("Grimy ranarr weed", "Vial of Water"))
                 .addSubActivity(Activities.consumeAll("Grimy ranarr weed"))
                 .addSubActivity(Activities.use("Ranarr weed", "Vial of Water"))

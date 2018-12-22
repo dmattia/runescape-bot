@@ -33,26 +33,4 @@ public class ActivityCollector implements Collector<Activity, Activity.Builder, 
     public Set<Characteristics> characteristics() {
         return Collections.emptySet();
     }
-
-    /*
-    @Override
-    public BiConsumer<Activity, Activity> accumulator() {
-        return (first, second) -> first.andThen(second);
-    }
-
-    @Override
-    public BinaryOperator<Activity> combiner() {
-        return (first, second) -> first.andThen(second);
-    }
-
-    @Override
-    public Function<Activity, Activity> finisher() {
-        return activity -> activity;
-    }
-
-    @Override
-    public Set<Characteristics> characteristics() {
-        return Collections.singleton(Characteristics.IDENTITY_FINISH);
-    }
-    */
 }

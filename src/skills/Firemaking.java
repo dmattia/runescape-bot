@@ -13,7 +13,7 @@ import util.common.Activity;
 import java.time.Duration;
 import java.util.*;
 
-// TODO(dmattia): THIS DOESN"T WORK!!!
+// TODO(dmattia): THIS DOESN"T WORK!!! Make less complicated by doing in controlled area like rogues/wildy
 public class Firemaking {
     public static Activity burnWillows() {
         Activity prepSupplies = Activity.newBuilder()
@@ -55,21 +55,11 @@ public class Firemaking {
                 .untilPreconditionsFail()
                 .build();
 
-        Activity all = Activity.newBuilder()
-                .withName("Running loop")
+       return Activity.newBuilder()
+                .withName("Willows")
                 .addSubActivity(prepSupplies)
                 .addSubActivity(burnAllLogs)
                 .build();
-
-        Activity tmp = Activity.newBuilder()
-                .addSubActivity(() -> {
-                    for (SceneObject obj : SceneObjects.getLoaded()) {
-                        System.out.println(obj.getName());
-                    }
-                })
-                .build();
-
-        return all;
     }
 
     private static boolean isOnSceneObject(Position pos) {
