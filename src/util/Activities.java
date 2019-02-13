@@ -3,16 +3,14 @@ package util;
 import org.rspeer.runetek.adapter.component.Item;
 import org.rspeer.runetek.adapter.scene.Pickable;
 import org.rspeer.runetek.api.Game;
+import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.BankLocation;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.component.Bank;
 import org.rspeer.runetek.api.component.Interfaces;
 import org.rspeer.runetek.api.component.Production;
 import org.rspeer.runetek.api.component.WorldHopper;
-import org.rspeer.runetek.api.component.tab.Equipment;
-import org.rspeer.runetek.api.component.tab.Inventory;
-import org.rspeer.runetek.api.component.tab.Tab;
-import org.rspeer.runetek.api.component.tab.Tabs;
+import org.rspeer.runetek.api.component.tab.*;
 import org.rspeer.runetek.api.movement.Movement;
 import org.rspeer.runetek.api.movement.position.Area;
 import org.rspeer.runetek.api.movement.position.Position;
@@ -30,6 +28,7 @@ import util.common.ActivityCollector;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -37,14 +36,6 @@ import java.util.stream.Stream;
 
 public class Activities {
     private static final int INVENTORY_SIZE = 28;
-
-    public static Activity debug(Supplier<String> s) {
-        return Activity.newBuilder()
-                .withName("Debugging")
-                .addSubActivity(() -> System.out.println("Debug: " + s.get()))
-                .onlyOnce()
-                .build();
-    }
 
     public static Activity goToBank() {
         return Activity.newBuilder()
@@ -60,7 +51,26 @@ public class Activities {
                 .withName("Switching to tab: " + tab.toString())
                 .addPreReq(() -> !Tabs.isOpen(tab))
                 .addSubActivity(() -> Tabs.open(tab))
-                .addSubActivity(() -> Time.sleepUntil(() -> Tabs.isOpen(tab), 134, 1000))
+                .addSubActivity(Activities.sleepUntil(() -> Tabs.isOpen(tab)))
+                .build();
+    }
+
+    public static Activity toggleRun() {
+        return Activity.newBuilder()
+                .withName("Turning run on")
+                .addPreReq(() -> Movement.getRunEnergy() == 100)
+                .addPreReq(() -> !Movement.isRunEnabled())
+                .addSubActivity(() -> Movement.toggleRun(true))
+                .onlyOnce()
+                .build();
+    }
+
+    public static Activity moveToExactly(Position position) {
+        return Activity.newBuilder()
+                .withName("Moving to the exact position: " + position)
+                .addPreReq(() -> Players.getLocal().distance(position) < 100)
+                .addSubActivity(() -> (Movement.setWalkFlag(position)))
+                .addSubActivity(Activities.sleepWhile(Movement::isDestinationSet))
                 .build();
     }
 
@@ -68,14 +78,32 @@ public class Activities {
         return Activity.newBuilder()
                 .withName("Moving to position: " + position)
                 .addPreReq(() -> position.distance(Players.getLocal()) > 5)
-                .addSubActivity(Activity.newBuilder()
-                        .addPreReq(() -> Movement.getRunEnergy() == 100)
-                        .addSubActivity(() -> Movement.toggleRun(true))
-                        .onlyOnce()
-                        .build())
-                .addSubActivity(() -> Movement.walkToRandomized(position))
-                .addSubActivity(() -> Time.sleepWhile(Movement::isDestinationSet, 1000 * 10))
+                .addSubActivity(toggleRun())
+                //.addSubActivity(() -> Movement.walkToRandomized(position))
+                .addSubActivity(() -> Movement.walkTo(position))
+                //.addSubActivity(magicImbue())
+                .addSubActivity(Activities.sleepUntil(() -> !Movement.isDestinationSet() ||
+                        Movement.getDestination().distance() < 4))
+                //.withoutPausingBetweenActivities()
                 .untilPreconditionsFail()
+                .build();
+    }
+
+    /**
+     * Casts magic imbue if it isn't already active. For now, this requires you to have a steam battlestaff and a rune
+     * pouch because that's what I always have when I imbue.
+     * TODO(dmattia): Make a better casting system that verifies rune prereqs
+     */
+    public static Activity magicImbue() {
+        int magicImbueVarpIndex = 5438;
+
+        return Activity.newBuilder()
+                .addPreReq(() -> Varps.getBitValue(magicImbueVarpIndex) == 0)
+                .addPreReq(() -> EquipmentSlot.MAINHAND.getItemName().equals("Steam battlestaff"))
+                .addPreReq(() -> Inventory.contains("Rune pouch"))
+                .addSubActivity(Activities.switchToTab(Tab.MAGIC))
+                .addSubActivity(() -> Magic.cast(Spell.Lunar.MAGIC_IMBUE))
+                .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
                 .build();
     }
 
@@ -97,7 +125,7 @@ public class Activities {
                 .withName("using item")
                 .addPreReq(() -> Inventory.contains(predicate))
                 .addSubActivity(() -> Inventory.getFirst(predicate).interact("Use"))
-                .addSubActivity(pauseFor(Duration.ofMillis(180)))
+                .addSubActivity(pauseFor(Duration.ofMillis(100)))
                 .onlyOnce()
                 .build();
     }
@@ -128,7 +156,7 @@ public class Activities {
                 .withName("Deselecting item")
                 .addPreReq(Inventory::isItemSelected)
                 .addSubActivity(() -> Inventory.deselectItem())
-                .addSubActivity(() -> Time.sleepWhile(Inventory::isItemSelected, 60, 500))
+                .addSubActivity(Activities.sleepWhile(Inventory::isItemSelected))
                 .onlyOnce()
                 .build();
     }
@@ -137,7 +165,7 @@ public class Activities {
         return Activity.newBuilder()
                 .withName("Hopping worlds")
                 .addSubActivity(() -> Tabs.open(Tab.LOGOUT))
-                .addSubActivity(() -> Time.sleepUntil(() -> Tabs.isOpen(Tab.LOGOUT), 300))
+                .addSubActivity(Activities.sleepUntil(() -> Tabs.isOpen(Tab.LOGOUT)))
                 .addSubActivity(
                         Activity.newBuilder()
                                 .withName("Opening world switcher")
@@ -147,7 +175,6 @@ public class Activities {
                                 .onlyOnce()
                                 .build()
                 )
-                //.addSubActivity(() -> WorldHopper.randomHopInP2p())
                 .addSubActivity(() -> WorldHopper.hopNext(Predicates::worldIsSafe))
                 .addSubActivity(() -> {
                     AtomicBoolean complete = new AtomicBoolean(false);
@@ -168,7 +195,6 @@ public class Activities {
      */
     public static Activity pauseFor(Duration duration) {
         return Activity.newBuilder()
-                .withName("Pausing for roughly " + duration.toMillis() + " ms")
                 .addSubActivity(() -> Time.sleep(duration.toMillis(), duration.toMillis() * 120 / 100))
                 .build();
     }
@@ -181,6 +207,7 @@ public class Activities {
         return Activity.newBuilder()
                 .withName("Opening bank")
                 .addPreReq(() -> !Bank.isOpen() && BankLocation.getNearestWithdrawable() != null)
+                .addSubActivity(() -> Activities.moveTo(BankLocation.getNearestWithdrawable().getPosition()).run())
                 .addSubActivity(() -> {
                     BankLocation bank = BankLocation.getNearestWithdrawable();
 
@@ -200,10 +227,9 @@ public class Activities {
                             break;
                     }
                 })
-                .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 1000 * 5))
+                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
                 .onlyOnce()
-                .build()
-                .addPreActivity(goToBank());
+                .build();
     }
 
     /**
@@ -214,7 +240,7 @@ public class Activities {
                 .withName("Closing bank")
                 .addPreReq(Bank::isOpen)
                 .addSubActivity(() -> Bank.close())
-                .addSubActivity(() -> Time.sleepWhile(Bank::isOpen, 1000))
+                .addSubActivity(Activities.sleepWhile(Bank::isOpen))
                 .onlyOnce()
                 .build();
     }
@@ -263,21 +289,30 @@ public class Activities {
                 .addPreActivity(openBank());
     }
 
-    public static Activity depositAll(String item) {
+    public static Activity depositAll(String itemName) {
         return Activity.newBuilder()
-                .withName("Depositing all " + item)
-                .addPreReq(() -> Inventory.contains(item))
-                .addSubActivity(() -> Bank.depositAll(item))
-                .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains(item), 2000))
+                .withName("Depositing all " + itemName)
+                .addSubActivity(depositAll(item -> item.getName().equalsIgnoreCase(itemName)))
+                .build();
+    }
+
+    public static Activity depositAll(Predicate<Item> predicate) {
+        return Activity.newBuilder()
+                .addPreReq(Bank::isOpen)
+                .addPreReq(() -> Inventory.contains(predicate))
+                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
+                .addSubActivity(() -> Bank.depositAll(predicate))
+                .addSubActivity(Activities.sleepWhile(() -> Inventory.contains(predicate)))
+                .withoutPausingBetweenActivities()
                 .onlyOnce()
-                .build()
-                .addPreActivity(openBank());
+                .build();
     }
 
     public static Activity withdrawEqualOf(String... items) {
         return Stream.of(items)
                 .map(item -> withdraw(item, INVENTORY_SIZE / items.length))
                 .collect(new ActivityCollector())
+                .build()
                 .addPreActivity(depositInventory())
                 .andThen(closeBank());
     }
@@ -290,15 +325,60 @@ public class Activities {
     public static Activity withdraw(String itemName, int amount) {
         return Activity.newBuilder()
                 .withName("Withdrawing " + amount + " of " + itemName)
+                .addSubActivity(withdraw(item -> item.getName().equalsIgnoreCase(itemName), amount))
+                .build();
+    }
+
+    public static Activity withdrawAll(String itemName) {
+        return Activity.newBuilder()
+                .withName("Withdrawing all of " + itemName)
+                .addSubActivity(withdrawAll(item -> item.getName().equalsIgnoreCase(itemName)))
+                .build();
+    }
+
+    public static Activity withdrawAll(Predicate<Item> predicate) {
+        return Activity.newBuilder()
                 .addPreReq(Bank::isOpen)
-                .addSubActivity(() -> Bank.withdraw(itemName, amount))
-                .addSubActivity(() -> Time.sleepUntil(() -> Inventory.getCount(true, itemName) >= amount, 2000))
+                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
                 .addSubActivity(() -> {
-                    if (Inventory.getCount(true, itemName) < amount) Globals.script.setStopping(true);
+                    int currentAmount = Inventory.getCount(true, predicate);
+                    Bank.withdrawAll(predicate);
+                    Activities.sleepUntil(() -> Inventory.getCount(true, predicate) > currentAmount).run();
                 })
-                .onlyOnce()
+                .withoutPausingBetweenActivities()
+                .build();
+    }
+
+    public static Activity withdraw(Predicate<Item> predicate, int amount) {
+        return Activity.newBuilder()
+                .addPreReq(Bank::isOpen)
+                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
+                .addSubActivity(() -> Bank.withdraw(predicate, amount))
+                .addSubActivity(Activities.sleepUntil(() -> Inventory.getCount(true, predicate) >= amount))
+                .withoutPausingBetweenActivities()
                 .build()
-                .addPreActivity(openBank());
+                .andThen(stopScriptIf(() -> Inventory.getCount(true, predicate) < amount));
+    }
+
+    public static Activity stopScriptIf(BooleanSupplier condition) {
+        return Activity.newBuilder()
+                .addPreReq(condition)
+                .addSubActivity(() -> Globals.script.setStopping(true))
+                .build();
+    }
+
+    public static Activity sleepWhile(BooleanSupplier condition) {
+        return Activity.newBuilder()
+                .addPreReq(condition)
+                .addSubActivity(pauseFor(Duration.ofMillis(50)))
+                .maximumDuration(Duration.ofMinutes(2))
+                .untilPreconditionsFail()
+                .build()
+                .andThen(stopScriptIf(condition));
+    }
+
+    public static Activity sleepUntil(BooleanSupplier condition) {
+        return sleepWhile(Predicates.not(condition));
     }
 
     /**
@@ -307,7 +387,7 @@ public class Activities {
      */
     public static Activity produceAll(String item) {
         Activity waitForProductionToOpen = Activity.newBuilder()
-                .addSubActivity(() -> Time.sleepUntil(Production::isOpen, 1000 * 2))
+                .addSubActivity(Activities.sleepUntil(Production::isOpen))
                 .build();
 
         return Activity.newBuilder()
@@ -346,7 +426,7 @@ public class Activities {
                 .addPreReq(() -> !Equipment.contains(item))
                 .addPreReq(() -> Inventory.contains(item))
                 .addSubActivity(() -> Inventory.getFirst(item).click())
-                .addSubActivity(() -> Time.sleepUntil(() -> Equipment.contains(item), 1000 * 3))
+                .addSubActivity(Activities.sleepUntil(() -> Equipment.contains(item)))
                 .build();
     }
 
@@ -410,11 +490,11 @@ public class Activities {
     public static Activity pickup(String itemName) {
         return Activity.newBuilder()
                 .withName("Picking up " + itemName)
-                .addPreReq(() -> Pickables.getNearest(itemName) != null && !Inventory.isFull())
+                .addPreReq(() -> Pickables.getNearest(item -> item.getName().contains(itemName)) != null && !Inventory.isFull())
                 .addSubActivity(() -> {
-                    int count = Inventory.getCount(itemName);
-                    Pickables.getNearest(itemName).interact("Take");
-                    Time.sleepUntil(() -> Inventory.getCount(itemName) > count, 1000 * 5);
+                    int count = Inventory.getCount(item -> item.getName().contains(itemName));
+                    Pickables.getNearest(item -> item.getName().contains(itemName)).interact("Take");
+                    Activities.sleepUntil(() -> Inventory.getCount(item -> item.getName().contains(itemName)) > count).run();
                 })
                 .onlyOnce()
                 .build();

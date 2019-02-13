@@ -3,6 +3,7 @@ package util;
 import org.rspeer.runetek.adapter.component.Item;
 import org.rspeer.runetek.providers.RSWorld;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
 class Predicates {
@@ -18,5 +19,9 @@ class Predicates {
                 !world.isSeasonDeadman() &&
                 !world.isPVP() &&
                 !world.isTournament();
+    }
+
+    static BooleanSupplier not(BooleanSupplier condition) {
+        return () -> !condition.getAsBoolean();
     }
 }

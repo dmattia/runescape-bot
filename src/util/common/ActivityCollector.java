@@ -8,7 +8,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-public class ActivityCollector implements Collector<Activity, Activity.Builder, Activity> {
+public class ActivityCollector implements Collector<Activity, Activity.Builder, Activity.Builder> {
     @Override
     public Supplier<Activity.Builder> supplier() {
         return () -> Activity.newBuilder();
@@ -25,8 +25,8 @@ public class ActivityCollector implements Collector<Activity, Activity.Builder, 
     }
 
     @Override
-    public Function<Activity.Builder, Activity> finisher() {
-        return Activity.Builder::build;
+    public Function<Activity.Builder, Activity.Builder> finisher() {
+        return builder -> builder;
     }
 
     @Override

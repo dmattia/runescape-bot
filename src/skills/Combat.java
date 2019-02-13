@@ -4,6 +4,7 @@ import org.rspeer.runetek.adapter.Varpbit;
 import org.rspeer.runetek.adapter.scene.Npc;
 import org.rspeer.runetek.adapter.scene.SceneObject;
 import org.rspeer.runetek.api.Game;
+import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.Streams;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.component.tab.Inventory;
@@ -21,13 +22,16 @@ import org.rspeer.runetek.event.listeners.AnimationListener;
 import org.rspeer.runetek.event.listeners.DeathListener;
 import org.rspeer.runetek.event.listeners.VarpListener;
 import org.rspeer.runetek.event.types.AnimationEvent;
+import org.rspeer.runetek.providers.RSNpcDefinition;
 import util.Activities;
+import util.Globals;
 import util.common.Activity;
 import util.common.ActivityCollector;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.rspeer.runetek.event.types.AnimationEvent.TYPE_FINISHED;
@@ -55,69 +59,93 @@ public class Combat {
     }
 
     public static Activity nmz() {
+        Position cofferArea = new Position(2609, 3115);
+        int ABSORPTION_MIN = 100;
+
         Activity moveNorthEast = Activity.newBuilder()
+                .withName("Moving to northeast corner")
                 .addSubActivity(moveInDirection(1, 1))
                 .addSubActivity(moveInDirection(1, 0))
                 .addSubActivity(moveInDirection(0, 1))
                 .build();
 
-        return Activity.newBuilder()
+        Supplier<Activity> overload = () -> Activity.newBuilder()
+                .withName("Drinking overload")
+                .addPreReq(() -> Inventory.contains(item -> item.getName().contains("Overload")))
+                .addPreReq(() -> Health.getCurrent() > 50)
+                .addPreReq(() -> Varps.getBitValue(3955) <= 1)
+                .addSubActivity(() -> {
+                    int currentHealth = Health.getCurrent();
+                    Inventory.getFirst(item -> item.getName().contains("Overload")).click();
+                    Time.sleepUntil(() -> Health.getCurrent() <= currentHealth - 50, 1000 * 10);
+                })
+                .build();
+
+        Supplier<Activity> eatRockCake = () -> Activity.newBuilder()
+                .withName("Eating rock cake to lower health")
+                .addSubActivity(() -> Inventory.contains("Dwarven rock cake"))
+                .addPreReq(() -> Health.getCurrent() > 1)
+                .addSubActivity(() -> Inventory.getFirst("Dwarven rock cake").interact("Guzzle"))
+                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(1)))
+                .untilPreconditionsFail()
+                .build();
+
+        Activity prepareForBattle = Activity.newBuilder()
+                .withName("Preparing for battle")
+                .addPreReq(() -> Prayers.getPoints() > 0)
                 .addSubActivity(Activities.switchToTab(Tab.PRAYER))
                 .addSubActivity(() -> Prayers.toggle(true, Prayer.PROTECT_FROM_MELEE))
                 .addSubActivity(moveNorthEast)
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
-                .addSubActivity(() -> Inventory.getFirst(item -> item.getName().contains("Overload")).click())
-                .addSubActivity(() -> Inventory.getFirst(item -> item.getName().contains("Absorption")).click())
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(10))) // Wait for overload to kick in
-                .addSubActivity(() -> {
-                    while(Health.getCurrent() > 1) {
-                        Inventory.getFirst("Dwarven rock cake").interact("Guzzle");
-                        Time.sleep(1100, 4200);
-                    }
-                })
-                .addSubActivity(() -> {
-                    ConcurrentLinkedQueue<Runnable> bufferedActions = new ConcurrentLinkedQueue();
+                .build();
 
-                    VarpListener listener = event -> {
-                        for (Varpbit varp : event.getChanges()) {
-                            if (varp.getKey() == 3956) {
-                                if (varp.getValue() <= 40) {
-                                    bufferedActions.add(() -> {
-                                        Time.sleep(500, 1200);
-                                        Inventory.getFirst(item -> item.getName().contains("Absorption")).click();
-                                    });
-                                }
-                            }
-
-                            if (varp.getKey() == 3955) {
-                                if (varp.getValue() == 1) {
-                                    bufferedActions.add(() -> {
-                                        Time.sleep(500, 1200);
-                                        if (Inventory.contains(item -> item.getName().contains("Overload"))) {
-                                            Inventory.getFirst(item -> item.getName().contains("Overload")).click();
-                                        }
-                                    });
-                                }
-                            }
-                        }
+        return Activity.newBuilder()
+                .withName("Handling inside of NMZ")
+                .addPreReq(() -> Inventory.contains(item -> item.getName().contains("Overload")))
+                .addPreReq(() -> Inventory.contains(item -> item.getName().contains("Absorption")))
+                .addPreReq(() -> Inventory.contains("Dwarven rock cake"))
+                .addPreReq(() -> Players.getLocal().distance(cofferArea) > 100)
+                .addSubActivity(prepareForBattle)
+                .addSubActivity(() -> {
+                    AtomicBoolean hasDied = new AtomicBoolean(false);
+                    DeathListener deathListener = event -> {
+                      if (event.getSource() == Players.getLocal()) {
+                          hasDied.set(true);
+                      }
                     };
 
-                    Game.getEventDispatcher().register(listener);
-                    while(Inventory.contains(item -> item.getName().contains("Absorption"))) {
-                        if (Health.getCurrent() > 1 && Health.getCurrent() < 10) {
-                            Inventory.getFirst("Dwarven rock cake").interact("Guzzle");
-                        }
-                        /*
-                        bufferedActions.stream().map(Activity::of).collect(new ActivityCollector()).run();
-                        bufferedActions.clear();
-                        */
-                        while(!bufferedActions.isEmpty()) {
-                            bufferedActions.poll().run();
-                            Time.sleep(300, 650);
-                        }
-                        Time.sleep(900, 2200);
-                    }
-                    Game.getEventDispatcher().deregister(listener);
+                    Game.getEventDispatcher().register(deathListener);
+
+                    Activity absorption = Activity.newBuilder()
+                            .withName("Drinking Absorption")
+                            .addPreReq(() -> Inventory.contains(item -> item.getName().contains("Absorption")))
+                            .addPreReq(() -> Varps.getBitValue(3956) < ABSORPTION_MIN)
+                            .addPreReq(() -> Inventory.getFirst(item -> item.getName().contains("Absorption")).click())
+                            .build();
+
+                    Activity useSpecialAttack = Activity.newBuilder()
+                            .withName("Using special attack")
+                            .addPreReq(() -> Players.getLocal().getTarget() != null)
+                            .addPreReq(() -> org.rspeer.runetek.api.component.tab.Combat.getSpecialEnergy() == 100)
+                            .addPreReq(() -> !org.rspeer.runetek.api.component.tab.Combat.isSpecialActive())
+                            .addSubActivity(Activities.switchToTab(Tab.COMBAT))
+                            .addSubActivity(() -> org.rspeer.runetek.api.component.tab.Combat.toggleSpecial(true))
+                            .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
+                            .build();
+
+                    Activity.newBuilder()
+                            .addPreReq(() -> !hasDied.get())
+                            .addPreReq(() -> Players.getLocal().distance(cofferArea) > 100)
+                            .addSubActivity(overload.get())
+                            .addSubActivity(absorption)
+                            .addSubActivity(eatRockCake.get())
+                            .addSubActivity(useSpecialAttack)
+                            .addSubActivity(Activities.pauseFor(Duration.ofMillis(450)))
+                            .untilPreconditionsFail()
+                            .build()
+                            .run();
+
+                    Game.getEventDispatcher().deregister(deathListener);
                 })
                 .build();
     }
@@ -125,6 +153,8 @@ public class Combat {
     public static Activity kill(Enemy enemy) {
         return Activity.newBuilder()
                 .withName("Killing " + enemy.getName())
+                .addPreReq(() -> Health.getPercent() > 20)
+                .addPreReq(() -> Prayers.getPoints() > 0)
                 .addSubActivity(Activities.moveTo(enemy.getPosition()))
                 .addSubActivity(Combat.kill(enemy.getName()))
                 .build();
@@ -132,6 +162,7 @@ public class Combat {
 
     public static Activity attack(String npcName) {
         Npc enemy = Npcs.getNearest(npc -> npc.getName().equals(npcName) && npc.getTarget() == null);
+        RSNpcDefinition def = enemy.getDefinition();
 
         return Activity.newBuilder()
                 .withName("Attacking " + npcName)

@@ -30,15 +30,20 @@ public class Activity implements Runnable {
     private int iteration;
     private Optional<String> name;
     private Optional<Activity> parent;
+    private boolean pauseBetweenActivities;
 
     // private because you should only create activities through Activity.newBuilder()...build().
-    private Activity(List<BooleanSupplier> preConditions, List<Runnable> activities, Optional<String> name) {
+    private Activity(List<BooleanSupplier> preConditions,
+                     List<Runnable> activities,
+                     Optional<String> name,
+                     boolean pauseBetweenActivities) {
         this.preConditions = preConditions;
         this.activities = activities;
         this.stopWatch = StopWatch.start();
         this.iteration = 1;
         this.name = name;
         this.parent = Optional.empty();
+        this.pauseBetweenActivities = pauseBetweenActivities;
 
         activities.stream()
                 .filter(Activity.class::isInstance)
@@ -87,15 +92,22 @@ public class Activity implements Runnable {
                 System.out.println("Current Activity : " + getFullName().get());
             }
 
-            activities.stream().forEach(runnable -> {
+            for (int i = 0; i < activities.size(); ++i) {
+                Runnable runnable = activities.get(i);
                 runnable.run();
 
-                // Sleep after each action because r/totallyNotRobots
-                Time.sleep(333, 666);
-            });
+                if (i == activities.size() - 1) continue;
+                if (Activity.class.isInstance(runnable) && Activity.class.cast(runnable).iteration <= 1) continue;
+                if (pauseBetweenActivities) Time.sleep(333, 666);
+            }
 
             ++iteration;
         }
+    }
+
+    @Override
+    public String toString() {
+        return getFullName().orElse("Unnamed activity");
     }
 
     /**
@@ -106,6 +118,7 @@ public class Activity implements Runnable {
                 .addSubActivity(this)
                 .addSubActivity(other)
                 .onlyOnce()
+                .withoutPausingBetweenActivities()
                 .build();
     }
 
@@ -125,6 +138,7 @@ public class Activity implements Runnable {
         private int maxIterations;
         private Duration maxDuration;
         private Optional<String> name;
+        private boolean pauseBetweenActivities;
 
         Builder() {
             this.preConditions = new ArrayList<>();
@@ -132,13 +146,14 @@ public class Activity implements Runnable {
             this.maxIterations = 1;
             this.maxDuration = Duration.ofHours(6);
             this.name = Optional.empty();
+            this.pauseBetweenActivities = true;
         }
 
         /**
          * Builds the completed, immutable Activiity object.
          */
         public Activity build() {
-            Activity activity = new Activity(preConditions, activities, name);
+            Activity activity = new Activity(preConditions, activities, name, pauseBetweenActivities);
 
             activity.preConditions.add(() -> !activity.stopWatch.exceeds(maxDuration));
             activity.preConditions.add(() -> activity.iteration <= maxIterations);
@@ -162,6 +177,11 @@ public class Activity implements Runnable {
          */
         public Builder withName(String name) {
             this.name = Optional.of(name);
+            return this;
+        }
+
+        public Builder withoutPausingBetweenActivities() {
+            this.pauseBetweenActivities = false;
             return this;
         }
 

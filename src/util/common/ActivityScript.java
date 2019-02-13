@@ -5,17 +5,24 @@ import org.rspeer.script.Script;
 import util.Globals;
 
 public abstract class ActivityScript extends Script {
-    public abstract Activity getActivity();
+    ActivitySelectorModel model;
+    ActivitySelectorView view;
+
+    public abstract ActivitySelectorModel getSelectionModel();
 
     @Override
     public void onStart() {
+        model = getSelectionModel();
+        view = new ActivitySelectorView(model);
+        view.setVisible(true);
+
         Globals.script = this;
     }
 
     @Override
     public int loop() {
-        getActivity().run();
+        model.getActivity().ifPresent(Activity::run);
 
-        return Random.nextInt(600, 2500);
+        return Random.nextInt(220, 350);
     }
 }

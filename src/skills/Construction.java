@@ -32,8 +32,6 @@ public class Construction {
      * Layout: https://www.youtube.com/watch?v=M6K0qySeRQU
      *
      * Jewelery Box:
-     X   Basic: 75 + 6 http://oldschoolrunescape.wikia.com/wiki/Basic_jewellery_box
-     O   Fancy: 78 + 8 http://oldschoolrunescape.wikia.com/wiki/Fancy_jewellery_box
      O   Ornate: 83 + 8 http://oldschoolrunescape.wikia.com/wiki/Ornate_jewellery_box
      *
      * Portals:
@@ -42,10 +40,7 @@ public class Construction {
      O   Watchtower/Yanille: 58 mage + Watchtower
      *
      * Pools:
-     X   Prayer: 72 + 8
      O   hitpoints: 82 + 8
-     *
-     x Servant's moneybag: 58
      */
 
 
@@ -137,7 +132,6 @@ public class Construction {
                 .addSubActivity(() -> SceneObjects.getNearest("Portal").interact("Enter"))
                 .addSubActivity(() -> Time.sleepWhile(House::isInside, 1211, 1000 * 10))
                 .build();
-
 
         return Activity.newBuilder()
                 .withName("Oak Larder Activity")
