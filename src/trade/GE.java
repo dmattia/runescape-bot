@@ -6,6 +6,7 @@ import org.rspeer.runetek.api.scene.Npcs;
 import util.Activities;
 import util.Locations;
 import util.common.Activity;
+import org.rspeer.ui.Log;
 
 /**
  * Utilities related to the Grand Exchange.  This uses the rsbuddy api to determine prices for buying/selling,
@@ -25,7 +26,7 @@ public class GE {
                 .addSubActivity(() -> Time.sleepUntil(GrandExchange::isOpen, 1000 * 8))
                 .addSubActivity(() -> {
                     PriceSummary priceInfo = Prices.getPriceSummary(itemId).get();
-                    System.out.println("Selling some " + priceInfo.getName());
+                    Log.info("Selling some " + priceInfo.getName());
                 })
                 .onlyOnce()
                 .build();

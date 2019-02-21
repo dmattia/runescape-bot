@@ -41,7 +41,7 @@ public class Activities {
         return Activity.newBuilder()
                 .withName("Moving to bank")
                 .addPreReq(() -> BankLocation.getNearest().getPosition().distance(Players.getLocal()) > 10)
-                .addSubActivity(moveTo(BankLocation.getNearest().getPosition()))
+                .addSubActivity(() -> moveTo(BankLocation.getNearest().getPosition()).run())
                 .onlyOnce()
                 .build();
     }
@@ -79,12 +79,9 @@ public class Activities {
                 .withName("Moving to position: " + position)
                 .addPreReq(() -> position.distance(Players.getLocal()) > 5)
                 .addSubActivity(toggleRun())
-                //.addSubActivity(() -> Movement.walkToRandomized(position))
                 .addSubActivity(() -> Movement.walkTo(position))
-                //.addSubActivity(magicImbue())
                 .addSubActivity(Activities.sleepUntil(() -> !Movement.isDestinationSet() ||
                         Movement.getDestination().distance() < 4))
-                //.withoutPausingBetweenActivities()
                 .untilPreconditionsFail()
                 .build();
     }
@@ -356,14 +353,14 @@ public class Activities {
                 .addSubActivity(() -> Bank.withdraw(predicate, amount))
                 .addSubActivity(Activities.sleepUntil(() -> Inventory.getCount(true, predicate) >= amount))
                 .withoutPausingBetweenActivities()
-                .build()
-                .andThen(stopScriptIf(() -> Inventory.getCount(true, predicate) < amount));
+                .build();
+                //.andThen(stopScriptIf(() -> Inventory.getCount(true, predicate) < amount));
     }
 
     public static Activity stopScriptIf(BooleanSupplier condition) {
         return Activity.newBuilder()
                 .addPreReq(condition)
-                .addSubActivity(() -> Globals.script.setStopping(true))
+                //.addSubActivity(() -> Globals.script.setStopping(true))
                 .build();
     }
 

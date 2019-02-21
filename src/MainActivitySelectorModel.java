@@ -13,12 +13,14 @@ public class MainActivitySelectorModel extends ActivitySelectorModel {
         put("RC Astrals", Runecrafting.astralRunes());
         put("RC Steams", Runecrafting.steamRunes());
         put("RC Mud", Runecrafting.mudRunes());
+        put("Rc Natures", Runecrafting.craftNatureRunes());
         put("Werewolf agility", Agility.werewolf());
         put("Superglass Make", Mage.superGlassMake());
-        put("Alch Gold Bracelets", Mage.castOn(Spell.Modern.HIGH_LEVEL_ALCHEMY, "Gold bracelet"));
+        put("High Alch", Mage.highAlch());
         put("Construct Oak Larders using Phials", Construction.makeOakLarder());
         put("Hunt for spices with cat", Kitten.huntForSpices());
         put("Thieve master gardener", Thieving.masterGardner());
+        put("Pest Control", Combat.pestControl());
     }};
 
     @Override

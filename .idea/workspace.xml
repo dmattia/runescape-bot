@@ -1,27 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/src/util/common/Activity.java" description="}" line="149" />
+    <bookmark url="file://$PROJECT_DIR$/src/util/common/Activity.java" description="}" line="160" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9dfd5db6-feee-4378-9cc8-dcff1745f887" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/MainActivitySelectorModel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/misc/Kitten.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/skills/Fishing.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/util/common/ActivitySelectorView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/util/common/ActivityConfigModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/AjorahAhaiScript.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/AjorahAhaiScript.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/MainActivitySelectorModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/MainActivitySelectorModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/skills/Combat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/skills/Combat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/skills/Construction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/skills/Construction.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/skills/Mage.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/skills/Mage.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/skills/Runecrafting.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/skills/Runecrafting.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/skills/Thieving.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/skills/Thieving.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/trade/GE.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/trade/GE.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/Activities.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/Activities.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/Predicates.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/Predicates.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/common/Activity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/common/Activity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/util/common/ActivityCollector.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/common/ActivityCollector.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/util/common/ActivityScript.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/common/ActivityScript.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/util/common/ActivitySelectorView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/util/common/ActivitySelectorView.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -34,11 +30,11 @@
     <session id="412254338">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="1" />
+          <entry key="project.closed" value="2" />
           <entry key="project.open.time.13" value="1" />
           <entry key="project.open.time.14" value="1" />
           <entry key="project.open.time.15" value="1" />
-          <entry key="project.open.time.16" value="1" />
+          <entry key="project.open.time.16" value="2" />
           <entry key="project.open.time.17" value="1" />
           <entry key="project.open.time.18" value="1" />
           <entry key="project.open.time.19" value="1" />
@@ -46,47 +42,74 @@
           <entry key="project.open.time.20" value="2" />
           <entry key="project.open.time.23" value="1" />
           <entry key="project.open.time.56" value="1" />
-          <entry key="project.opened" value="12" />
+          <entry key="project.opened" value="13" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="dummy" value="73" />
-          <entry key="java" value="115552" />
+          <entry key="java" value="127125" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="JAVA" value="115552" />
+          <entry key="JAVA" value="127125" />
           <entry key="PLAIN_TEXT" value="73" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
-          <entry key="class" value="20" />
+          <entry key="class" value="23" />
           <entry key="iml" value="3" />
-          <entry key="java" value="179" />
+          <entry key="java" value="191" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
-          <entry key="CLASS" value="20" />
+          <entry key="CLASS" value="23" />
           <entry key="IDEA_MODULE" value="3" />
-          <entry key="JAVA" value="179" />
+          <entry key="JAVA" value="191" />
         </counts>
       </usages-collector>
     </session>
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="false">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/skills/Combat.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1248">
-              <caret line="106" column="78" selection-start-line="106" selection-start-column="78" selection-end-line="106" selection-end-column="78" />
+            <state relative-caret-position="260">
+              <caret line="89" column="76" selection-start-line="89" selection-start-column="76" selection-end-line="89" selection-end-column="76" />
               <folding>
                 <element signature="imports" expanded="true" />
                 <element signature="method#moveInDirection#0;class#Combat#0" />
+                <element signature="method#nmz#0;class#Combat#0" />
+                <element signature="method#kill#0;class#Combat#0" />
+                <element signature="method#attack#0;class#Combat#0" />
+                <element signature="method#hillGiants#0;class#Combat#0" />
+                <element signature="class#Enemy#0;class#Combat#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/skills/Runecrafting.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1353">
+              <caret line="295" column="71" selection-start-line="295" selection-start-column="71" selection-end-line="295" selection-end-column="71" />
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="method#repairPouches#0;class#Runecrafting#0" />
+                <element signature="method#makeSingleNatureRun#0;class#Runecrafting#0" />
+                <element signature="method#goToZanaris#0;class#Runecrafting#0" />
+                <element signature="method#craftCosmicRunes#0;class#Runecrafting#0" />
+                <element signature="method#craftCosmicRunesSingleRun#0;class#Runecrafting#0" />
+                <element signature="method#astralRunes#0;class#Runecrafting#0" />
+                <element signature="method#steamRunes#0;class#Runecrafting#0" />
+                <element signature="method#mudRunes#0;class#Runecrafting#0" />
+                <element signature="method#craftRunes#0;class#Runecrafting#0" />
+                <element signature="method#getEss#0;class#Runecrafting#0" />
               </folding>
             </state>
           </provider>
@@ -95,26 +118,33 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorView.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="420">
-              <caret line="28" column="47" selection-start-line="28" selection-start-column="47" selection-end-line="28" selection-end-column="47" />
+            <state relative-caret-position="415">
+              <caret line="71" selection-start-line="71" selection-end-line="71" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#645#857#0" expanded="true" />
-                <element signature="e#856#857#0" expanded="true" />
+                <element signature="e#880#1092#0" expanded="true" />
+                <element signature="e#1091#1092#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/MainActivitySelectorModel.java">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/skills/Mage.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="390">
-              <caret line="26" column="5" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
+            <state relative-caret-position="30">
+              <caret line="2" column="25" selection-start-line="2" selection-start-column="25" selection-end-line="2" selection-end-column="25" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/trade/GE.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="135">
+              <caret line="9" selection-start-line="9" selection-end-line="9" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#1077#1078#0" expanded="true" />
-                <element signature="e#1112#1113#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -123,24 +153,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="17" column="42" selection-start-line="17" selection-start-column="42" selection-end-line="17" selection-end-column="42" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#185#186#0" expanded="true" />
-                <element signature="e#274#275#0" expanded="true" />
-                <element signature="e#710#711#0" expanded="true" />
-                <element signature="e#753#754#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/util/common/ActivityScript.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="375">
-              <caret line="25" column="20" selection-start-line="25" selection-start-column="20" selection-end-line="25" selection-end-column="20" />
+            <state relative-caret-position="285">
+              <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -149,19 +163,13 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/script/task/TaskScript.class">
+        <entry file="file://$PROJECT_DIR$/src/MainActivitySelectorModel.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-757">
-              <caret line="15" column="22" selection-start-line="15" selection-start-column="22" selection-end-line="15" selection-end-column="22" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/script/Script.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="424">
-              <caret line="204" column="1" lean-forward="true" selection-start-line="204" selection-start-column="1" selection-end-line="204" selection-end-column="1" />
+            <state relative-caret-position="330">
+              <caret line="22" column="50" selection-start-line="22" selection-start-column="50" selection-end-line="22" selection-end-column="50" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -169,26 +177,25 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/util/common/Activity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="432">
-              <caret line="109" column="56" selection-start-line="109" selection-start-column="56" selection-end-line="109" selection-end-column="56" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#3992#3993#0" expanded="true" />
-                <element signature="e#4031#4032#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="120">
+              <caret line="8" column="25" selection-start-line="8" selection-start-column="25" selection-end-line="8" selection-end-column="25" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/AjorahAhaiScript.java">
+        <entry file="file://$PROJECT_DIR$/src/util/Activities.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="798">
-              <caret line="57" column="6" selection-start-line="57" selection-start-column="6" selection-end-line="57" selection-end-column="6" />
+            <state relative-caret-position="242">
+              <caret line="77" column="8" selection-start-line="77" selection-start-column="8" selection-end-line="85" selection-end-column="25" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#907#908#0" expanded="true" />
-                <element signature="e#960#961#0" expanded="true" />
+                <element signature="e#4871#4872#0" expanded="true" />
+                <element signature="e#4918#4919#0" expanded="true" />
+                <element signature="e#16482#16483#0" expanded="true" />
+                <element signature="e#16542#16543#0" expanded="true" />
+                <element signature="e#18157#18158#0" expanded="true" />
+                <element signature="e#18201#18202#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -206,10 +213,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>1444</find>
-      <find>buildAndRun</find>
-      <find>Use</find>
-      <find>zanaris</find>
       <find>withDraw</find>
       <find>pauseFor</find>
       <find>use(</find>
@@ -236,9 +239,14 @@
       <find>openBank</find>
       <find>imbue</find>
       <find>Enemy</find>
+      <find>class</find>
+      <find>setStopping</find>
+      <find>stopScriptIf</find>
+      <find>System.out.println</find>
     </findStrings>
     <replaceStrings>
       <replace />
+      <replace>Log.info</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -247,7 +255,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/src/MoveToShopTask.java" />
         <option value="$PROJECT_DIR$/src/util/Locations.java" />
         <option value="$PROJECT_DIR$/src/util/action/SubActivity.java" />
         <option value="$PROJECT_DIR$/src/util/Items.java" />
@@ -270,7 +277,6 @@
         <option value="$PROJECT_DIR$/src/util/common/TimeBasedCache.java" />
         <option value="$PROJECT_DIR$/src/favor/Hosidius.java" />
         <option value="$PROJECT_DIR$/src/skills/Magic.java" />
-        <option value="$PROJECT_DIR$/src/trade/GE.java" />
         <option value="$PROJECT_DIR$/src/skills/Cooking.java" />
         <option value="$PROJECT_DIR$/src/skills/Crafting.java" />
         <option value="$PROJECT_DIR$/src/skills/Firemaking.java" />
@@ -281,23 +287,25 @@
         <option value="$PROJECT_DIR$/src/skills/Fishing.java" />
         <option value="$PROJECT_DIR$/src/misc/Kitten.java" />
         <option value="$PROJECT_DIR$/src/skills/Construction.java" />
-        <option value="$PROJECT_DIR$/src/skills/Mage.java" />
         <option value="$PROJECT_DIR$/src/util/Predicates.java" />
         <option value="$PROJECT_DIR$/src/util/common/ActivityCollector.java" />
         <option value="$PROJECT_DIR$/src/skills/Agility.java" />
         <option value="$PROJECT_DIR$/src/skills/Thieving.java" />
-        <option value="$PROJECT_DIR$/src/util/Activities.java" />
-        <option value="$PROJECT_DIR$/src/skills/Runecrafting.java" />
         <option value="$PROJECT_DIR$/src/ActivitySelectorView.java" />
         <option value="$PROJECT_DIR$/src/ActivitySelectorModel.java" />
         <option value="$PROJECT_DIR$/src/ActivitySelectorModelImpl.java" />
         <option value="$PROJECT_DIR$/src/AjorahAhaiScript.java" />
+        <option value="$PROJECT_DIR$/src/util/common/ActivityConfigModel.java" />
+        <option value="$PROJECT_DIR$/src/util/common/ActivityScript.java" />
+        <option value="$PROJECT_DIR$/src/util/common/ActivitySelectorView.java" />
+        <option value="$PROJECT_DIR$/src/skills/Runecrafting.java" />
         <option value="$PROJECT_DIR$/src/MainActivitySelectorModel.java" />
         <option value="$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java" />
         <option value="$PROJECT_DIR$/src/util/common/Activity.java" />
-        <option value="$PROJECT_DIR$/src/util/common/ActivitySelectorView.java" />
+        <option value="$PROJECT_DIR$/src/skills/Mage.java" />
+        <option value="$PROJECT_DIR$/src/trade/GE.java" />
+        <option value="$PROJECT_DIR$/src/util/Activities.java" />
         <option value="$PROJECT_DIR$/src/skills/Combat.java" />
-        <option value="$PROJECT_DIR$/src/util/common/ActivityScript.java" />
       </list>
     </option>
   </component>
@@ -314,7 +322,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
+      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -339,23 +347,16 @@
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="util" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="Feathers" type="b2602c69:ProjectViewProjectNode" />
-              <item name="dev" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="util" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/davidmattia/Desktop/rsbot/dev/src/trade/PriceSummary.java" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1550032250927" />
+    <property name="SearchEverywhereHistoryKey" value="RSClientPreferences&#9;PSI&#9;JAVA://org.rspeer.runetek.providers.RSClientPreferences&#10;Rsclient&#9;PSI&#9;JAVA://org.rspeer.runetek.providers.RSClient&#10;setStopping&#9;PSI&#9;JAVA://org.rspeer.script.LoopTask#setStopping" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1550731620000" />
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
@@ -421,7 +422,7 @@
       <window_info id="UI Designer" order="1" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Favorites" order="3" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="4" visible="true" weight="0.23626374" />
+      <window_info content_ui="combo" id="Project" order="4" visible="true" weight="0.23870574" />
       <window_info id="Structure" order="5" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="6" />
       <window_info anchor="bottom" id="Terminal" order="0" weight="0.3298731" />
@@ -431,7 +432,7 @@
       <window_info anchor="bottom" id="Inspection Results" order="4" weight="0.3298731" />
       <window_info anchor="bottom" id="Message" order="5" />
       <window_info anchor="bottom" id="Find" order="6" weight="0.32871974" />
-      <window_info anchor="bottom" id="Run" order="7" visible="true" weight="0.30565166" />
+      <window_info active="true" anchor="bottom" id="Run" order="7" visible="true" weight="0.30565166" />
       <window_info anchor="bottom" id="Debug" order="8" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
@@ -460,42 +461,52 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/skills/Runecrafting.java</url>
-          <line>326</line>
+          <line>511</line>
           <properties />
           <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/skills/Runecrafting.java</url>
+          <line>561</line>
+          <properties />
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/skills/Runecrafting.java</url>
+          <line>560</line>
+          <properties />
+          <option name="timeStamp" value="5" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/skills/Runecrafting.java</url>
+          <line>861</line>
+          <properties />
+          <option name="timeStamp" value="7" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/skills/Combat.java</url>
+          <line>251</line>
+          <properties />
+          <option name="timeStamp" value="9" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/skills/Combat.java</url>
+          <line>308</line>
+          <properties />
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/skills/Combat.java</url>
+          <line>307</line>
+          <properties class="skills.Combat" method="kill">
+            <option name="EMULATED" value="true" />
+          </properties>
+          <option name="timeStamp" value="8" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_20.jdk/Contents/Home/src.zip!/java/util/function/Function.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="117">
-          <caret line="65" column="4" selection-start-line="65" selection-start-column="4" selection-end-line="68" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/ExceptionThrowingFunction.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="23" column="13" selection-start-line="23" selection-start-column="13" selection-end-line="23" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/Requests.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="27" selection-start-line="27" selection-end-line="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/trade/Prices.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="444">
-          <caret line="59" column="103" selection-start-line="59" selection-start-column="103" selection-end-line="59" selection-end-column="103" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/util/common/TimeBasedCache.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="503">
@@ -505,13 +516,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dev.iml">
       <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/trade/GE.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="25" selection-start-line="25" selection-end-line="25" />
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/util/Locations.java">
       <provider selected="true" editor-type-id="text-editor">
@@ -629,16 +633,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/skills/Mage.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="72" column="75" selection-start-line="72" selection-start-column="72" selection-end-line="72" selection-end-column="75" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/favor/Hosidius.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
@@ -727,45 +721,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/skills/Thieving.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="690">
-          <caret line="64" column="107" selection-start-line="64" selection-start-column="107" selection-end-line="64" selection-end-column="107" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/Activities.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="235">
-          <caret line="81" column="18" selection-start-line="81" selection-start-column="18" selection-end-line="81" selection-end-column="18" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/skills/Runecrafting.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="349">
-          <caret line="477" selection-start-line="477" selection-end-line="477" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#repairPouches#0;class#Runecrafting#0" />
-            <element signature="method#makeSingleNatureRun#0;class#Runecrafting#0" />
-            <element signature="docComment;method#craftNatureRunes#0;class#Runecrafting#0" />
-            <element signature="method#craftNatureRunes#0;class#Runecrafting#0" />
-            <element signature="method#goToZanaris#0;class#Runecrafting#0" />
-            <element signature="method#craftCosmicRunes#0;class#Runecrafting#0" />
-            <element signature="method#craftCosmicRunesSingleRun#0;class#Runecrafting#0" />
-            <element signature="method#steamRunes#0;class#Runecrafting#0" />
-            <element signature="method#mudRunes#0;class#Runecrafting#0" />
-            <element signature="method#craftRunes#0;class#Runecrafting#0" />
-            <element signature="method#getEss#0;class#Runecrafting#0" />
-            <element signature="class#Type#0;class#Runecrafting#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/skills/Cooking.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
@@ -783,44 +738,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="17" column="42" selection-start-line="17" selection-start-column="42" selection-end-line="17" selection-end-column="42" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#185#186#0" expanded="true" />
-            <element signature="e#274#275#0" expanded="true" />
-            <element signature="e#710#711#0" expanded="true" />
-            <element signature="e#753#754#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/Activity.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="432">
-          <caret line="109" column="56" selection-start-line="109" selection-start-column="56" selection-end-line="109" selection-end-column="56" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#3992#3993#0" expanded="true" />
-            <element signature="e#4031#4032#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorView.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="28" column="47" selection-start-line="28" selection-start-column="47" selection-end-line="28" selection-end-column="47" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#645#857#0" expanded="true" />
-            <element signature="e#856#857#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/script/task/TaskScript.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-757">
@@ -831,51 +748,176 @@
     <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/script/Script.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="424">
-          <caret line="204" column="1" lean-forward="true" selection-start-line="204" selection-start-column="1" selection-end-line="204" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util/common/ActivityScript.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="375">
-          <caret line="25" column="20" selection-start-line="25" selection-start-column="20" selection-end-line="25" selection-end-column="20" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/skills/Combat.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1248">
-          <caret line="106" column="78" selection-start-line="106" selection-start-column="78" selection-end-line="106" selection-end-column="78" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="method#moveInDirection#0;class#Combat#0" />
-          </folding>
+          <caret line="220" column="1" selection-start-line="220" selection-start-column="1" selection-end-line="220" selection-end-column="1" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/AjorahAhaiScript.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="798">
-          <caret line="57" column="6" selection-start-line="57" selection-start-column="6" selection-end-line="57" selection-end-column="6" />
+        <state relative-caret-position="165">
+          <caret line="20" column="44" selection-start-line="20" selection-start-column="19" selection-end-line="20" selection-end-column="44" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#907#908#0" expanded="true" />
-            <element signature="e#960#961#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/skills/Thieving.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="235">
+          <caret line="64" column="107" selection-start-line="64" selection-start-column="107" selection-end-line="64" selection-end-column="107" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/script/LoopTask.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="202">
+          <caret line="41" column="16" selection-start-line="41" selection-start-column="16" selection-end-line="41" selection-end-column="16" />
+          <folding>
+            <element signature="e#838#839#0" expanded="true" />
+            <element signature="e#878#879#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/common/ActivityScript.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="23" column="26" selection-start-line="23" selection-start-column="26" selection-end-line="23" selection-end-column="26" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/common/ActivityConfigModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="8" column="34" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/runetek/providers/RSClient.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1643">
+          <caret line="371" column="23" selection-start-line="371" selection-start-column="4" selection-end-line="371" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$USER_HOME$/RSPeer/cache/rspeer.jar!/org/rspeer/runetek/providers/RSClientPreferences.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="9" column="17" selection-start-line="9" selection-start-column="17" selection-end-line="9" selection-end-column="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/skills/Runecrafting.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1353">
+          <caret line="295" column="71" selection-start-line="295" selection-start-column="71" selection-end-line="295" selection-end-column="71" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#repairPouches#0;class#Runecrafting#0" />
+            <element signature="method#makeSingleNatureRun#0;class#Runecrafting#0" />
+            <element signature="method#goToZanaris#0;class#Runecrafting#0" />
+            <element signature="method#craftCosmicRunes#0;class#Runecrafting#0" />
+            <element signature="method#craftCosmicRunesSingleRun#0;class#Runecrafting#0" />
+            <element signature="method#astralRunes#0;class#Runecrafting#0" />
+            <element signature="method#steamRunes#0;class#Runecrafting#0" />
+            <element signature="method#mudRunes#0;class#Runecrafting#0" />
+            <element signature="method#craftRunes#0;class#Runecrafting#0" />
+            <element signature="method#getEss#0;class#Runecrafting#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorView.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="415">
+          <caret line="71" selection-start-line="71" selection-end-line="71" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#880#1092#0" expanded="true" />
+            <element signature="e#1091#1092#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/MainActivitySelectorModel.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="5" selection-start-line="26" selection-start-column="5" selection-end-line="26" selection-end-column="5" />
+        <state relative-caret-position="330">
+          <caret line="22" column="50" selection-start-line="22" selection-start-column="50" selection-end-line="22" selection-end-column="50" />
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#1077#1078#0" expanded="true" />
-            <element signature="e#1112#1113#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/common/ActivitySelectorModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="19" column="8" selection-start-line="19" selection-start-column="8" selection-end-line="19" selection-end-column="8" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/common/Activity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="25" selection-start-line="8" selection-start-column="25" selection-end-line="8" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/skills/Mage.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="25" selection-start-line="2" selection-start-column="25" selection-end-line="2" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/trade/GE.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="135">
+          <caret line="9" selection-start-line="9" selection-end-line="9" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/util/Activities.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="77" column="8" selection-start-line="77" selection-start-column="8" selection-end-line="85" selection-end-column="25" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#4871#4872#0" expanded="true" />
+            <element signature="e#4918#4919#0" expanded="true" />
+            <element signature="e#16482#16483#0" expanded="true" />
+            <element signature="e#16542#16543#0" expanded="true" />
+            <element signature="e#18157#18158#0" expanded="true" />
+            <element signature="e#18201#18202#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/skills/Combat.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="260">
+          <caret line="89" column="76" selection-start-line="89" selection-start-column="76" selection-end-line="89" selection-end-column="76" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="method#moveInDirection#0;class#Combat#0" />
+            <element signature="method#nmz#0;class#Combat#0" />
+            <element signature="method#kill#0;class#Combat#0" />
+            <element signature="method#attack#0;class#Combat#0" />
+            <element signature="method#hillGiants#0;class#Combat#0" />
+            <element signature="class#Enemy#0;class#Combat#0" />
           </folding>
         </state>
       </provider>

@@ -1,5 +1,7 @@
 package util.common;
 
+import org.rspeer.ui.Log;
+
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,13 +11,13 @@ public abstract class ActivitySelectorModel {
     public abstract Map<String, Activity> getActivityMap();
 
     private static final Activity DEFAULT_ACTIVITY = Activity.newBuilder()
-            .addSubActivity(() -> System.out.println("Invalid activity selected"))
+            .addSubActivity(() -> Log.info("Invalid activity selected"))
             .build();
 
     void setActivityByName(String activityName) {
-        System.out.println("Switching to activity " + activityName);
+        Log.info("Switching to activity " + activityName);
         this.activityToRun = getActivityMap().getOrDefault(activityName, DEFAULT_ACTIVITY);
-        System.out.println(activityToRun);
+        Log.info(activityToRun);
     }
 
     String[] getActivityKeys() {

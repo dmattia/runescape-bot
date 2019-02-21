@@ -1,5 +1,6 @@
 package skills;
 
+import org.rspeer.runetek.adapter.Positionable;
 import org.rspeer.runetek.adapter.Varpbit;
 import org.rspeer.runetek.adapter.scene.Npc;
 import org.rspeer.runetek.adapter.scene.SceneObject;
@@ -14,23 +15,29 @@ import org.rspeer.runetek.api.component.tab.Tab;
 import org.rspeer.runetek.api.local.Health;
 import org.rspeer.runetek.api.movement.Movement;
 import org.rspeer.runetek.api.movement.position.Area;
+import org.rspeer.runetek.api.movement.position.InstancePosition;
 import org.rspeer.runetek.api.movement.position.Position;
 import org.rspeer.runetek.api.scene.Npcs;
 import org.rspeer.runetek.api.scene.Players;
+import org.rspeer.runetek.api.scene.Scene;
 import org.rspeer.runetek.api.scene.SceneObjects;
 import org.rspeer.runetek.event.listeners.AnimationListener;
 import org.rspeer.runetek.event.listeners.DeathListener;
 import org.rspeer.runetek.event.listeners.VarpListener;
 import org.rspeer.runetek.event.types.AnimationEvent;
 import org.rspeer.runetek.providers.RSNpcDefinition;
+import org.rspeer.ui.Log;
 import util.Activities;
 import util.Globals;
 import util.common.Activity;
 import util.common.ActivityCollector;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -55,6 +62,97 @@ public class Combat {
                     }
                     Time.sleepUntil(() -> !Movement.isDestinationSet(), 1000 * 10);
                 })
+                .build();
+    }
+
+    /**
+     * Runs to the north and kills stuff
+     */
+    public static Activity pestControl() {
+        Position veteranBoat = new Position(2638, 2653);
+        //Position myHangoutSpot = new Position(2657, 2581);
+        //Area pestControlIsland = Area.rectangular(2622, 2618, 2694, 2560);
+        //10914 9523
+
+        //BooleanSupplier isOnIsland = () -> pestControlIsland.contains(Players.getLocal().getPosition());
+        BooleanSupplier isOnIsland = Game.getClient()::isInInstancedScene;
+
+        Function<Position, Activity> moveTo = position -> Activity.newBuilder()
+                    .withName("Moving to position: " + position)
+                    .addPreReq(() -> Movement.isWalkable(position))
+                    .addPreReq(() -> position.distance(Players.getLocal()) > 5)
+                    .addSubActivity(Activities.toggleRun())
+                    .addSubActivity(() -> Movement.walkTo(position))
+                    /*
+                    .addSubActivity(() -> Time.sleepUntil(() -> !Movement.isDestinationSet() ||
+                            Movement.getDestination().distance() < 4, 1000 * 10))
+                            */
+                    .addSubActivity(Activities.pauseFor(Duration.ofSeconds(4)))
+                    //.maximumDuration(Duration.ofSeconds(20))
+                    .untilPreconditionsFail()
+                    .build();
+
+        Activity boardShip = Activity.newBuilder()
+                .withName("Boarding ship to start game")
+                .addPreReq(() -> SceneObjects.getNearest("Gangplank") != null)
+                .addPreReq(() -> !isOnIsland.getAsBoolean())
+                .addPreReq(() -> Players.getLocal().getX() >= 2638)
+                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
+                .addSubActivity(Activities.moveTo(veteranBoat))
+                .addSubActivity(() -> SceneObjects.getNearest("Gangplank").interact("Cross"))
+                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(3)))
+                .build();
+
+        Activity waitForGameToStart = Activity.newBuilder()
+                .withName("Waiting for game to start")
+                .addPreReq(() -> !isOnIsland.getAsBoolean())
+                .addPreReq(() -> Players.getLocal().getX() < 2638)
+                //.addSubActivity(Activities.sleepUntil(() -> pestControlIsland.contains(Players.getLocal().getPosition())))
+                .addSubActivity(() -> Time.sleepUntil(isOnIsland, 1000 * 60 * 10))
+                //.addSubActivity(Activities.pauseFor(Duration.ofSeconds(3)))
+                .build();
+
+        Activity goToSpawnSpot = Activity.newBuilder()
+                .withName("Going to my fav spot")
+                .addPreReq(isOnIsland)
+                //.addPreReq(() -> Npcs.getNearest(npc -> true) == null)
+                //.addPreReq(() -> Npcs.getNearest(npc -> true).containsAction("Attack"))
+                //.addPreReq(() -> Players.getLocal().distance(myHangoutSpot) > 10)
+                //.addSubActivity(Activities.moveTo(myHangoutSpot))
+                .addSubActivity(() -> moveTo.apply(Players.getLocal().getPosition().translate(0, -31)).run())
+                .addSubActivity(() -> {
+                    /*
+                    Position current = Players.getLocal().getPosition();
+                    Position desired = current.translate(0, -31);
+                    if (Movement.isWalkable(desired)) {
+                        Activities.moveTo(desired).run();
+                    }
+                    */
+                    /*
+                    Position pos = new InstancePosition(169, 89, 0).getPosition().translate(0, -10);
+                    Activities.moveTo(pos).run();
+                    */
+                })
+                .build();
+
+        Activity killStuff = Activity.newBuilder()
+                .withName("killing stuff")
+                .addPreReq(isOnIsland)
+                .addPreReq(() -> Npcs.getNearest(npc -> true) != null)
+                .addPreReq(() -> Npcs.getNearest(npc -> true).containsAction("Attack"))
+                .addSubActivity(() -> Npcs.getNearest(npc -> true).interact("Attack"))
+                //.addSubActivity(waitUntilTargetKilled())
+                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().getTarget() == null))
+                .build();
+
+        return Activity.newBuilder()
+                // TODO(dmattia): Check for world 344
+                .withName("Pest Control")
+                .addSubActivity(boardShip)
+                .addSubActivity(waitForGameToStart)
+                //.addSubActivity(prayRange)
+                .addSubActivity(goToSpawnSpot)
+                .addSubActivity(killStuff)
                 .build();
     }
 
@@ -161,6 +259,7 @@ public class Combat {
     }
 
     public static Activity attack(String npcName) {
+        /*
         Npc enemy = Npcs.getNearest(npc -> npc.getName().equals(npcName) && npc.getTarget() == null);
         RSNpcDefinition def = enemy.getDefinition();
 
@@ -169,6 +268,10 @@ public class Combat {
                 .addPreReq(() -> enemy != null)
                 .addSubActivity(() -> enemy.interact("Attack"))
                 .onlyOnce()
+                .build();
+                */
+        return Activity.newBuilder()
+                .withName("Not Implemented, has a bug")
                 .build();
     }
 
@@ -179,23 +282,9 @@ public class Combat {
                 .addSubActivity(() -> {
                     AtomicBoolean enemyKilled = new AtomicBoolean(false);
                     DeathListener deathListener = event -> enemyKilled.set(event.getSource() == Players.getLocal().getTarget());
-                    AnimationListener animationListener = event -> {
-                      if (event.getType() == TYPE_FINISHED && event.getSource() == Players.getLocal().getTarget()) {
-                          System.out.println("Enemy started animation");
-                          //Prayers.flick(Prayer.PROTECT_FROM_MELEE, 60);
-                          Prayers.toggle(true, Prayer.PROTECT_FROM_MELEE);
-                          Time.sleep(60, 100);
-                          Prayers.toggle(false, Prayer.PROTECT_FROM_MELEE);
-                          System.out.println("Prayer turned off");
-                      }
-                      //System.out.println("Animation event recorded 2");
-                    };
-
                     Game.getEventDispatcher().register(deathListener);
-                    Game.getEventDispatcher().register(animationListener);
                     Time.sleepUntil(() -> enemyKilled.get(), 600, 1000 * 60 * 3);
                     Game.getEventDispatcher().deregister(deathListener);
-                    Game.getEventDispatcher().deregister(animationListener);
                 })
                 .onlyOnce()
                 .build();

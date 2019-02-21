@@ -2,6 +2,7 @@ package util.common;
 
 import org.rspeer.runetek.api.commons.math.Random;
 import org.rspeer.script.Script;
+import org.rspeer.script.events.breaking.BreakEvent;
 import util.Globals;
 
 public abstract class ActivityScript extends Script {
@@ -17,6 +18,12 @@ public abstract class ActivityScript extends Script {
         view.setVisible(true);
 
         Globals.script = this;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        view.dispose();
     }
 
     @Override

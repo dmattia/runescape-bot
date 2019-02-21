@@ -2,15 +2,17 @@ package util.common;
 
 import org.rspeer.runetek.adapter.scene.Npc;
 import org.rspeer.runetek.adapter.scene.SceneObject;
+import org.rspeer.runetek.api.Game;
 import org.rspeer.runetek.api.commons.StopWatch;
 import org.rspeer.runetek.api.commons.Time;
 import util.Globals;
+import org.rspeer.ui.Log;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -31,12 +33,14 @@ public class Activity implements Runnable {
     private Optional<String> name;
     private Optional<Activity> parent;
     private boolean pauseBetweenActivities;
+    private Optional<ActivityConfigModel> configModel;
 
     // private because you should only create activities through Activity.newBuilder()...build().
     private Activity(List<BooleanSupplier> preConditions,
                      List<Runnable> activities,
                      Optional<String> name,
-                     boolean pauseBetweenActivities) {
+                     boolean pauseBetweenActivities,
+                     Optional<ActivityConfigModel> configModel) {
         this.preConditions = preConditions;
         this.activities = activities;
         this.stopWatch = StopWatch.start();
@@ -44,6 +48,7 @@ public class Activity implements Runnable {
         this.name = name;
         this.parent = Optional.empty();
         this.pauseBetweenActivities = pauseBetweenActivities;
+        this.configModel = configModel;
 
         activities.stream()
                 .filter(Activity.class::isInstance)
@@ -54,6 +59,10 @@ public class Activity implements Runnable {
     private Activity setParent(Activity parent) {
         this.parent = Optional.of(parent);
         return this;
+    }
+
+    public Optional<ActivityConfigModel> getConfigModel() {
+        return configModel;
     }
 
     /**
@@ -89,7 +98,7 @@ public class Activity implements Runnable {
 
         while (preConditions.stream().allMatch(BooleanSupplier::getAsBoolean)) {
             if (getFullName().isPresent() && iteration == 1) {
-                System.out.println("Current Activity : " + getFullName().get());
+                Log.info("Current Activity : " + getFullName().get());
             }
 
             for (int i = 0; i < activities.size(); ++i) {
@@ -139,6 +148,7 @@ public class Activity implements Runnable {
         private Duration maxDuration;
         private Optional<String> name;
         private boolean pauseBetweenActivities;
+        private Optional<ActivityConfigModel> configModel;
 
         Builder() {
             this.preConditions = new ArrayList<>();
@@ -147,18 +157,20 @@ public class Activity implements Runnable {
             this.maxDuration = Duration.ofHours(6);
             this.name = Optional.empty();
             this.pauseBetweenActivities = true;
+            this.configModel = Optional.empty();
         }
 
         /**
          * Builds the completed, immutable Activiity object.
          */
         public Activity build() {
-            Activity activity = new Activity(preConditions, activities, name, pauseBetweenActivities);
+            Activity activity = new Activity(preConditions, activities, name, pauseBetweenActivities, configModel);
 
             activity.preConditions.add(() -> !activity.stopWatch.exceeds(maxDuration));
             activity.preConditions.add(() -> activity.iteration <= maxIterations);
             activity.preConditions.add(() -> !Globals.script.isPaused());
             activity.preConditions.add(() -> !Globals.script.isStopping());
+            activity.preConditions.add(() -> Game.isLoggedIn());
 
             return activity;
         }
@@ -169,6 +181,29 @@ public class Activity implements Runnable {
          */
         public Builder addSubActivity(Runnable activity) {
             activities.add(activity);
+            return this;
+        }
+
+        public Builder addSubActivity(Consumer<Map<String, String>> function) {
+            activities.add(() -> {
+                Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
+                function.accept(map);
+            });
+            return this;
+        }
+
+        /*
+        public Builder addSubActivity(Function<Map<String, String>, Activity> function) {
+            activities.add(() -> {
+                Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
+                function.apply(map).run();
+            });
+            return this;
+        }
+        */
+
+        public Builder withConfigModel(ActivityConfigModel configModel) {
+            this.configModel = Optional.of(configModel);
             return this;
         }
 
@@ -191,6 +226,14 @@ public class Activity implements Runnable {
          */
         public Builder addPreReq(BooleanSupplier condition) {
             preConditions.add(condition);
+            return this;
+        }
+
+        public Builder addPreReq(Function<Map<String, String>, Boolean> function) {
+            preConditions.add(() -> {
+                Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
+                return function.apply(map);
+            });
             return this;
         }
 

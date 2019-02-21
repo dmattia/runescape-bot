@@ -1,5 +1,6 @@
 package skills;
 
+import org.rspeer.ui.Log;
 import org.rspeer.runetek.api.Game;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.component.Dialog;
@@ -10,6 +11,7 @@ import org.rspeer.runetek.event.listeners.SkillListener;
 import org.rspeer.runetek.event.types.SkillEvent;
 import util.Activities;
 import util.common.Activity;
+import util.common.ActivityConfigModel;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -52,6 +54,18 @@ public class Mage {
                 .build();
     }
 
+    public static Activity highAlch() {
+        ActivityConfigModel config = ActivityConfigModel.newBuilder()
+                .withTextField("alchable", "Gold bracelet")
+                .build();
+
+        return Activity.newBuilder()
+                .withName("High alching")
+                .withConfigModel(config)
+                .addSubActivity(map -> Mage.castOn(Spell.Modern.HIGH_LEVEL_ALCHEMY, map.get("alchable")).run())
+                .build();
+    }
+
     public static Activity superGlassMake() {
         Activity getSupplies = Activity.newBuilder()
                 .withName("Getting seaweed and buckets of sand")
@@ -89,7 +103,7 @@ public class Mage {
                     Inventory.getFirst(inventoryItem).interact("Cast");
                     Time.sleepUntil(() -> Inventory.getCount(inventoryItem) < count, 111, 600);
                 })
-                .untilPreconditionsFail()
+                //.untilPreconditionsFail()
                 .build();
     }
 
@@ -116,7 +130,7 @@ public class Mage {
                     AtomicBoolean complete = new AtomicBoolean(false);
                     SkillListener listener = event -> {
                         if (event.getType() == SkillEvent.TYPE_LEVEL) {
-                            System.out.println("Advanced a level :)");
+                            Log.info("Advanced a level :)");
                             complete.set(true);
                         }
                     };
