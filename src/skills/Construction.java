@@ -26,47 +26,6 @@ public class Construction {
 
     private static final Position PHIALS = new Position(2950, 3213);
 
-    /**
-     * Wish List :)
-     *
-     * Layout: https://www.youtube.com/watch?v=M6K0qySeRQU
-     *
-     * Jewelery Box:
-     O   Ornate: 83 + 8 http://oldschoolrunescape.wikia.com/wiki/Ornate_jewellery_box
-     *
-     * Portals:
-     X   Camelot: 45 mage
-     O   Ardougne: 51 mage + Plague City
-     O   Watchtower/Yanille: 58 mage + Watchtower
-     *
-     * Pools:
-     O   hitpoints: 82 + 8
-     */
-
-
-    /**
-     * TODO(dmattia): Finish adding servant support
-     * Activity callServant = Activity.newBuilder()
-     * .addSubActivity(() -> Tabs.open(Tab.OPTIONS))
-     * .addSubActivity(() -> Time.sleepUntil(() -> Tabs.isOpen(Tab.OPTIONS), 1000 * 2))
-     * <p>
-     * // Once Api is fixed: .addSubActivity(() -> HouseOptions.open())
-     * .addSubActivity(() -> Interfaces.getComponent(261, 98).interact("View House Options"))
-     * <p>
-     * .addSubActivity(() -> Time.sleepUntil(HouseOptions::isOpen, 1000 * 2))
-     * .addSubActivity(() -> HouseOptions.callButler())
-     * <p>
-     * .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 1000))
-     * .addSubActivity(() -> Dialog.process(0))
-     * .build();
-     * <p>
-     * Activity acceptServantPlanks = Activity.newBuilder()
-     * .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 888, 1000 * 13))
-     * .addSubActivity(() -> Dialog.processContinue())
-     * .onlyOnce()
-     * .build();
-     */
-
     public static Activity makeOakLarder() {
         Activity destroyLarder = Activity.newBuilder()
                 .withName("Destroying a larder mwahaha")
@@ -77,7 +36,7 @@ public class Construction {
                 .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 222, 1000 * 5))
                 .addSubActivity(() -> Dialog.process("Yes"))
                 .addSubActivity(() -> Time.sleepWhile(Dialog::isOpen, 222, 1000 * 5))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(1200)))
+                .thenPauseFor(Duration.ofMillis(1200))
                 .build();
 
         Activity makeLarder = Activity.newBuilder()
@@ -111,9 +70,9 @@ public class Construction {
                 .addSubActivity(Activities.use("Oak Plank"))
                 .addSubActivity(() -> Npcs.getNearest("Phials").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 1000 * 3))
-                .addSubActivity(() -> Activities.pauseFor(Duration.ofSeconds(1)))
+                .pauseFor(Duration.ofSeconds(1))
                 .addSubActivity(() -> Dialog.process(2))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(429)))
+                .thenPauseFor(Duration.ofMillis(429))
                 .build();
 
         Activity enterHouse = Activity.newBuilder()
@@ -189,7 +148,7 @@ public class Construction {
                 .withName("Making Planks from interface")
                 .addPreReq(() -> Interfaces.isOpen(403))
                 .addSubActivity(() -> Interfaces.getComponent(403, 108).interact(action -> true))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(1500)))
+                .thenPauseFor(Duration.ofMillis(1500))
                 .addSubActivity(() -> Keyboard.sendText("27"))
                 .addSubActivity(() -> Keyboard.pressEnter())
                 .addSubActivity(() -> Time.sleepUntil(() -> !Interfaces.isOpen(403), 1000 * 3))

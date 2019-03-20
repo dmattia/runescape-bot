@@ -29,7 +29,7 @@ public class Fishing {
                                         .run();
                             });
                 })
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(5)))
+                .thenPauseFor(Duration.ofSeconds(5))
                 .addSubActivity(() -> Time.sleepWhile(() -> Players.getLocal().getAnimation() != -1, 1876, 1000 * 60 * 5))
                 .addSubActivity(Kitten.pet())
                 .addSubActivity(Kitten.feed("Raw salmon"))

@@ -17,7 +17,7 @@ public class Kitten {
                 .addPreReq(() -> Inventory.contains(fishName))
                 .addSubActivity(Activities.use(fishName))
                 .addSubActivity(() -> Npcs.getNearest("Kitten").interact("Use"))
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(4)))
+                .thenPauseFor(Duration.ofSeconds(4))
                 .build();
     }
 
@@ -29,7 +29,7 @@ public class Kitten {
                 .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 4000))
                 .addSubActivity(() -> Dialog.process(0))
                 .addSubActivity(() -> Time.sleepWhile(Dialog::isOpen, 4000))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(4567)))
+                .thenPauseFor(Duration.ofMillis(4567))
                 .build();
     }
 
@@ -39,7 +39,7 @@ public class Kitten {
                 .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 4000))
                 .addSubActivity(() -> Dialog.process(1))
                 .addSubActivity(() -> Time.sleepWhile(Dialog::isOpen, 4000))
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(5)))
+                .thenPauseFor(Duration.ofSeconds(5))
                 .addSubActivity(Activities.pickup("Orange spice ("))
                 .build();
     }

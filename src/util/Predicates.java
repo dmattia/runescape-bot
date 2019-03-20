@@ -6,7 +6,7 @@ import org.rspeer.runetek.providers.RSWorld;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
-class Predicates {
+public class Predicates {
     static final Predicate<Item> FEATHER_PACK_PREDICATE = item -> item.getName().contains("Feather pack");
 
     static boolean worldIsSafe(RSWorld world) {
@@ -21,7 +21,7 @@ class Predicates {
                 !world.isTournament();
     }
 
-    static BooleanSupplier not(BooleanSupplier condition) {
+    public static BooleanSupplier not(BooleanSupplier condition) {
         return () -> !condition.getAsBoolean();
     }
 }

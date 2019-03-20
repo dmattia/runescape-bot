@@ -94,7 +94,7 @@ public class Mining {
                     }).interact("Mine");
                     Time.sleepUntil(() -> Inventory.getCount(rockType.getOre()) > count, 100, 1000 * 30);
                 })
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(268)))
+                .tick()
                 .untilPreconditionsFail()
                 .build()
                 .andThen(Activities.dropAll(rockType.getOre()));

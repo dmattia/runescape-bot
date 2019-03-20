@@ -29,103 +29,6 @@ public class Runecrafting {
     private static final Area AIR_ALTAR = Area.rectangular(2982, 3288, 2988, 3294);
     private static final Area ZANARIS = Area.rectangular(2309, 4347, 2510, 4492);
 
-    private static Activity repairPouches() {
-       return Activity.newBuilder()
-                .withName("Repairing pouches via npc contact")
-                .addSubActivity(Activities.withdraw("Astral rune", 1))
-                .addSubActivity(Activities.withdraw("Cosmic rune", 1))
-                .addSubActivity(Activities.withdraw("Air rune", 2))
-                .addSubActivity(Activities.closeBank())
-                .addSubActivity(Activities.switchToTab(Tab.MAGIC))
-                .addSubActivity(() -> Magic.cast(Spell.Lunar.NPC_CONTACT))
-                .addSubActivity(() -> Time.sleepUntil(() ->
-                        Interfaces.firstByAction(action -> action.equalsIgnoreCase("Dark mage")) != null, 5000))
-                .addSubActivity(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("Dark mage")).click())
-                .addSubActivity(() -> Time.sleepUntil(Dialog::isOpen, 1200, 8000))
-                .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
-                .build();
-    }
-
-    private static Activity makeSingleNatureRun() {
-        Activity getEss = Activity.newBuilder()
-                .withName("Withdrawing rune essence")
-                .addPreReq(() -> !Inventory.contains("Pure essence"))
-                .addSubActivity(Activities.depositAll("Nature rune"))
-                .addSubActivity(Activities.withdraw("Nature talisman", 1))
-                .addSubActivity(Activities.withdraw("Pure essence", 23))
-                .addSubActivity(Activities.closeBank())
-                .addSubActivity(() -> {
-                    Stream.of(Inventory.getItems(item -> item.getName().contains("pouch")))
-                            .map(item -> Activity.of(() -> item.interact("Fill")))
-                            .collect(new ActivityCollector())
-                            .build()
-                            .run();
-                })
-                .addSubActivity(Activities.withdraw("Pure essence", 23))
-                .addSubActivity(Activities.closeBank())
-                .build();
-
-        Activity goToAltar = Activity.newBuilder()
-                .withName("Going to Nature altar")
-                .addSubActivity(Activities.moveTo(FairyRing.getNearest().getPosition()))
-                .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact("Last-Destination (CKR)"))
-                .addSubActivity(() -> Time.sleepUntil(() -> FairyRing.getNearest().getCode().equals("CKR"), 524, 5000))
-                .addSubActivity(Activities.moveTo(Type.NATURE.getPosition()))
-                .build();
-
-        Activity craftRunes = Activity.newBuilder()
-                .withName("Crafting some runes")
-                .addSubActivity(Activities.use(Type.NATURE.getTalisman()))
-                .addSubActivity(() -> SceneObjects.getNearest("Mysterious Ruins").interact("Use"))
-                .addSubActivity(() -> Time.sleepUntil(() ->
-                        Type.NATURE.getPosition().distance(Players.getLocal()) > 500, 5000))
-
-                .addSubActivity(Activities.use("Pure Essence"))
-                .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Use"))
-                .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains("Pure Essence"), 1000 * 15))
-
-                // Pause in case a level up dialog appears
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
-                .addSubActivity(() -> {
-                    Stream.of(Inventory.getItems(item -> item.getName().contains("pouch")))
-                            .map(item -> Activity.of(() -> item.interact("Empty")))
-                            .collect(new ActivityCollector())
-                            .build()
-                            .run();
-                })
-                .addSubActivity(Activities.use("Pure Essence"))
-                .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Use"))
-                .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains("Pure Essence"), 1000 * 15))
-
-                // Pause in case a level up dialog appears
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
-                .build();
-
-        Activity goHome = Activity.newBuilder()
-                .withName("Going home & handling business there")
-                .addSubActivity(() -> Inventory.getFirst("Teleport to house").click())
-                .addSubActivity(() -> Time.sleepUntil(House::isInside, 650, 1000 * 12))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(426)))
-                .addSubActivity(() -> SceneObjects.getNearest(so -> so.getName().startsWith("Pool")).click())
-                .addSubActivity(() -> Time.sleepUntil(() -> Movement.getRunEnergy() == 100, 365, 1000 * 15))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(500)))
-                .addSubActivity(() -> SceneObjects.getNearest("Amulet of Glory").interact("Edgeville"))
-                .addSubActivity(() -> Time.sleepWhile(House::isInside, 10000))
-                .build();
-
-        return Activity.newBuilder()
-                .withName("Making rune run")
-                .addSubActivity(getEss)
-                .addSubActivity(goToAltar)
-                .addSubActivity(craftRunes)
-                .addSubActivity(goHome)
-                .onlyOnce()
-                .build();
-    }
-
     /**
      * Crafts natures safely on Karamja, using a home teleport to find a fairy ring
      */
@@ -133,20 +36,22 @@ public class Runecrafting {
         Position nearAltar = new Position(2866, 3021);
         int DEGRADED_GIANT_POUCH_ID = 5515;
 
+        // TODO(dmattia): Move to activities and handle if Dark Mage was not most recently used.
         Activity npcContact = Activity.newBuilder()
                 .withName("Casting npc contact")
                 .addPreReq(() -> Inventory.contains("Giant pouch"))
                 .addPreReq(() -> Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID)
                 .addPreReq(() -> Magic.getSpellBook() == Magic.SPELLBOOK_LUNAR)
+                .addPreReq(() -> Magic.canCast(Spell.Lunar.NPC_CONTACT))
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.interact(Spell.Lunar.NPC_CONTACT, "Dark Mage"))
-                .addSubActivity(Activities.sleepUntil(Dialog::isOpen))
+                .thenSleepUntil(Dialog::isOpen)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(Activities.stopScriptIf(() ->
                         Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID))
                 .withoutPausingBetweenActivities()
@@ -166,7 +71,7 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Bank chest") != null)
                 .addPreReq(() -> !Inventory.contains("Pure Essence"))
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll("Nature rune"))
                 .addSubActivity(getRing)
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
@@ -179,7 +84,7 @@ public class Runecrafting {
                 .addSubActivity(() -> Inventory.getFirst("Small pouch").interact("Fill"))
 
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
                 .addSubActivity(Activities.closeBank())
 
@@ -187,11 +92,10 @@ public class Runecrafting {
                 .addSubActivity(() -> Inventory.getFirst("Large pouch").interact("Fill"))
 
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
                 .addSubActivity(Activities.closeBank())
 
-                //.withoutPausingBetweenActivities()
                 .build();
 
         Activity goHome = Activity.newBuilder()
@@ -200,8 +104,8 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Bank chest") != null)
                 .addPreReq(() -> Inventory.contains("Pure Essence"))
                 .addSubActivity(() -> Inventory.getFirst("Teleport to house").click())
-                .addSubActivity(Activities.sleepUntil(House::isInside))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
+                .thenSleepUntil(House::isInside)
+                .tick()
                 .build();
 
         Activity switchToLunar = Activity.newBuilder()
@@ -209,9 +113,9 @@ public class Runecrafting {
                 .addPreReq(() -> Magic.getSpellBook() != Magic.SPELLBOOK_LUNAR)
                 .addPreReq(House::isInside)
                 .addSubActivity(() -> SceneObjects.getNearest("Lunar Altar").interact("Venerate"))
-                .addSubActivity(Activities.sleepUntil(Dialog::isOpen))
+                .thenSleepUntil(Dialog::isOpen)
                 .addSubActivity(() -> Dialog.process("Lunar"))
-                .addSubActivity(Activities.sleepUntil(() -> Magic.getSpellBook() == Magic.SPELLBOOK_LUNAR))
+                .thenSleepUntil(() -> Magic.getSpellBook() == Magic.SPELLBOOK_LUNAR)
                 .withoutPausingBetweenActivities()
                 .build();
 
@@ -222,43 +126,9 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Ornate rejuvenation pool") != null)
                 .addPreReq(() -> Movement.getRunEnergy() < 45)
                 .addSubActivity(() -> SceneObjects.getNearest("Ornate rejuvenation pool").click())
-                .addSubActivity(Activities.sleepUntil(() -> Movement.getRunEnergy() == 100))
+                .thenSleepUntil(() -> Movement.getRunEnergy() == 100)
                 .withoutPausingBetweenActivities()
                 .build();
-
-        /**
-         * TODO(dmattia): Move these three fairy ring activities to common area
-         */
-        Activity useFairyRingSlowly = Activity.newBuilder()
-                .addPreReq(House::isInside)
-                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
-                .addPreReq(() -> !SceneObjects.getNearest("Fairy ring").containsAction("Last-Destination (CKR)"))
-                .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact("Configure"))
-                .addSubActivity(Activities.sleepUntil(FairyRing::isInterfaceOpen))
-                .addSubActivity(() -> FairyRing.enterCode(FairyRing.Destination.CKR))
-                .addSubActivity(() -> FairyRing.confirm())
-                .addSubActivity(Activities.sleepUntil(() -> !House.isInside()))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
-                .build();
-
-        Activity useFairyRingQuickly = Activity.newBuilder()
-                .addPreReq(House::isInside)
-                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
-                .addPreReq(() -> SceneObjects.getNearest("Fairy ring").containsAction("Last-Destination (CKR)"))
-                .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact("Last-Destination (CKR)"))
-                .addSubActivity(Activities.sleepUntil(() -> !House.isInside()))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
-                .build();
-
-        Activity useFairyRing = Activity.newBuilder()
-                .addPreReq(House::isInside)
-                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
-                .addPreReq(() -> !FairyRing.getNearest().getCode().equals("CKR"))
-                .addSubActivity(useFairyRingSlowly)
-                .addSubActivity(useFairyRingQuickly)
-                .withoutPausingBetweenActivities()
-                .build();
-        // ################################## END FAIRY RING CODE TO MOVE ####################################
 
         Activity goNearAltar = Activity.newBuilder()
                 .withName("Going to Nature altar")
@@ -272,7 +142,7 @@ public class Runecrafting {
                 .addPreReq(() -> Players.getLocal().distance(nearAltar) < 25)
                 .addPreReq(() -> SceneObjects.getNearest("Mysterious Ruins") != null)
                 .addSubActivity(() -> SceneObjects.getNearest("Mysterious ruins").interact("Enter"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(nearAltar) > 500))
+                .thenSleepUntil(() -> Players.getLocal().distance(nearAltar) > 500)
                 .build();
 
         Activity craftRunes = Activity.newBuilder()
@@ -282,18 +152,18 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Altar").containsAction("Craft-rune"))
                 .addPreReq(() -> !House.isInside())
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .tick()
                 .addSubActivity(() -> Inventory.getFirst("Giant pouch").interact("Empty"))
                 .addSubActivity(() -> Inventory.getFirst("Small pouch").interact("Empty"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .tick()
                 .addSubActivity(() -> Inventory.getFirst("Large pouch").interact("Empty"))
                 .addSubActivity(() -> Inventory.getFirst("Medium pouch").interact("Empty"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(600)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .tick()
                 .build();
 
         Activity goToBank = Activity.newBuilder()
@@ -304,8 +174,8 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.RING.getItemName().contains("dueling"))
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Castle Wars"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(nearAltar) > 100))
-                .addSubActivity(Activities.sleepUntil(() -> SceneObjects.getNearest("Bank chest") != null))
+                .thenSleepUntil(() -> Players.getLocal().distance(nearAltar) > 100)
+                .thenSleepUntil(() -> SceneObjects.getNearest("Bank chest") != null)
                 .build();
 
         return Activity.newBuilder()
@@ -315,9 +185,7 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.HEAD.getItemName().equals("Nature tiara"))
                 .addPreReq(() -> Inventory.contains("Rune pouch"))
                 .addPreReq(() -> Inventory.contains("Teleport to house"))
-                // TODO: Add check for lunar spellbook
                 // TODO: Add check for dark mage as npc contact option
-                // TODO: Fairy ring support for not using last option
                 // TODO: Add Activity-specific break event api
                 .addSubActivity(() -> BreakEvent.setCondition(() -> Players.getLocal().distance(nearAltar) < 500))
                 .addSubActivity(npcContact)
@@ -325,14 +193,13 @@ public class Runecrafting {
                 .addSubActivity(goHome)
                 .addSubActivity(switchToLunar)
                 .addSubActivity(drinkFromPool)
-                .addSubActivity(useFairyRing)
+                .addSubActivity(Activities.useHouseFairyRing(FairyRing.Destination.CKR))
                 .addSubActivity(goNearAltar)
                 .addSubActivity(enterRuins)
                 .addSubActivity(craftRunes)
                 .addSubActivity(goToBank)
                 .build();
     }
-
 
     /**
      * Goes to Zanaris the non Fairy Ring way, using the building in Lumbridge Swanp.
@@ -384,13 +251,13 @@ public class Runecrafting {
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 601, 1000 * 15))
                 .addSubActivity(() -> Bank.withdraw("Astral rune", 1))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .tick()
                 .addSubActivity(() -> Bank.withdraw("Cosmic rune", 1))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .tick()
                 .addSubActivity(() -> Bank.withdraw("Air rune", 1))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(286)))
+                .tick()
                 .addSubActivity(() -> Bank.withdraw("Air rune", 1))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .tick()
                 .addSubActivity(() -> Bank.close())
                 .addSubActivity(() -> Time.sleepUntil(Bank::isClosed, 1000 * 5))
 
@@ -440,9 +307,9 @@ public class Runecrafting {
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 601, 1000 * 15))
                 .addSubActivity(() -> Bank.depositAll("Cosmic rune"))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .tick()
                 .addSubActivity(() -> Bank.withdraw("Pure Essence", 24))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .tick()
                 .addSubActivity(() -> Bank.close())
                 .addSubActivity(() -> Time.sleepUntil(Bank::isClosed, 1000 * 5))
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
@@ -458,7 +325,7 @@ public class Runecrafting {
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 601, 1000 * 15))
                 .addSubActivity(() -> Bank.withdraw("Pure Essence", 24))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(624)))
+                .thenPauseFor(Duration.ofMillis(624))
                 .addSubActivity(() -> Bank.close())
                 .addSubActivity(() -> Time.sleepUntil(Bank::isClosed, 1000 * 5))
                 .build();
@@ -469,7 +336,7 @@ public class Runecrafting {
                 .addPreReq(() -> Movement.getRunEnergy() < 30)
                 .addSubActivity(() -> SceneObjects.getNearest(so -> so.getName().endsWith(" pool")).click())
                 .addSubActivity(() -> Time.sleepUntil(() -> Movement.getRunEnergy() == 100, 365, 1000 * 15))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(500)))
+                .thenPauseFor(Duration.ofMillis(500))
                 .build();
 
         Activity goHome = Activity.newBuilder()
@@ -481,7 +348,7 @@ public class Runecrafting {
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
                 .addSubActivity(() -> Inventory.getFirst("Teleport to house").click())
                 .addSubActivity(() -> Time.sleepUntil(House::isInside, 650, 1000 * 12))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(426)))
+                .tick()
                 .addSubActivity(restoreRunEnergy)
                 .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact("Zanaris"))
                 .addSubActivity(() -> Time.sleepWhile(House::isInside, 10000))
@@ -505,7 +372,7 @@ public class Runecrafting {
                 .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains("Pure Essence"), 1000 * 15))
 
                 // Pause in case a level up dialog appears
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
+                .thenPauseFor(Duration.ofSeconds(2))
                 .addSubActivity(() -> {
                     Stream.of(Inventory.getItems(item -> item.getName().contains("pouch")))
                             .map(item -> Activity.of(() -> item.interact("Empty")))
@@ -518,14 +385,14 @@ public class Runecrafting {
                 .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains("Pure Essence"), 1000 * 15))
 
                 // Pause in case a level up dialog appears
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
+                .thenPauseFor(Duration.ofSeconds(2))
                 .build();
 
         Activity goToBank = Activity.newBuilder()
                 .withName("Going to bank")
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Castle Wars"))
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(3)))
+                .thenPauseFor(Duration.ofSeconds(3))
                 .build();
 
         Activity switchRingsIfNecessary = Activity.newBuilder()
@@ -537,7 +404,7 @@ public class Runecrafting {
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(Bank::isOpen, 601, 1000 * 15))
                 .addSubActivity(() -> Bank.deposit("Ring of dueling(1)", 1))
-                .addSubActivity(() -> Activities.pauseFor(Duration.ofMillis(650)))
+                .tick()
                 .addSubActivity(() -> Bank.withdraw("Ring of dueling(8)", 1))
                 .addSubActivity(() -> Time.sleepUntil(() -> Inventory.contains("Ring of dueling(8)"), 1000 * 3))
                 .addSubActivity(() -> Bank.close())
@@ -562,19 +429,20 @@ public class Runecrafting {
         Position moonClanTeleport = new Position(2113, 3914);
         int DEGRADED_GIANT_POUCH_ID = 5515;
 
+        // TODO(dmattia): Move to Activities
         Activity npcContact = Activity.newBuilder()
                 .withName("Casting npc contact")
                 .addPreReq(() -> Inventory.contains("Giant pouch"))
                 .addPreReq(() -> Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID)
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.interact(Spell.Lunar.NPC_CONTACT, "Dark Mage"))
-                .addSubActivity(Activities.sleepUntil(Dialog::isOpen))
+                .thenSleepUntil(Dialog::isOpen)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .withoutPausingBetweenActivities()
                 .build()
                 .andThen(Activities.stopScriptIf(() -> Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID));
@@ -611,7 +479,7 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Bank chest") != null)
                 .addPreReq(() -> !Inventory.contains("Pure Essence"))
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll("Astral rune"))
                 .addSubActivity(getStamPot)
                 .addSubActivity(getRing)
@@ -627,7 +495,7 @@ public class Runecrafting {
                 .addSubActivity(() -> Inventory.getFirst("Small pouch").interact("Fill"))
 
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll(item -> item.getName().contains("Stamina potion")))
                 .addSubActivity(Activities.depositAll("Vial"))
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
@@ -636,7 +504,7 @@ public class Runecrafting {
                 .addSubActivity(() -> Inventory.getFirst("Medium pouch").interact("Fill"))
                 .addSubActivity(() -> Inventory.getFirst("Large pouch").interact("Fill"))
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
                 .addSubActivity(Activities.closeBank())
 
@@ -650,7 +518,7 @@ public class Runecrafting {
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.cast(Spell.Lunar.MOONCLAN_TELEPORT))
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(moonClanTeleport) < 10))
+                .thenSleepUntil(() -> Players.getLocal().distance(moonClanTeleport) < 10)
                 .addSubActivity(Activities.moveTo(nearAltar))
                 .withoutPausingBetweenActivities()
                 .build();
@@ -661,18 +529,18 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Altar") != null)
                 .addPreReq(() -> Players.getLocal().distance(nearAltar) < 25)
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(800)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .thenPauseFor(Duration.ofMillis(800))
                 .addSubActivity(() -> Inventory.getFirst("Giant pouch").interact("Empty"))
                 .addSubActivity(() -> Inventory.getFirst("Medium pouch").interact("Empty"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(800)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .thenPauseFor(Duration.ofMillis(800))
                 .addSubActivity(() -> Inventory.getFirst("Large pouch").interact("Empty"))
                 .addSubActivity(() -> Inventory.getFirst("Small pouch").interact("Empty"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Craft-rune"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(800)))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
+                .thenPauseFor(Duration.ofMillis(800))
                 .build();
 
         Activity goToBank = Activity.newBuilder()
@@ -683,7 +551,7 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.RING.getItemName().contains("dueling"))
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Castle Wars"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(nearAltar) > 100))
+                .thenSleepUntil(() -> Players.getLocal().distance(nearAltar) > 100)
                 .addSubActivity(Activities.magicImbue())
                 .build();
 
@@ -704,19 +572,26 @@ public class Runecrafting {
     public static Activity steamRunes() {
         Position fireAltar = new Position(3307, 3245); // location near the fire altar ruins
         Position fireAltarInside = new Position(2578, 4845); // location inside the fire altar
+        int DEGRADED_GIANT_POUCH_ID = 5515;
 
+        // TODO(dmattia): Move to activities and handle if Dark Mage was not most recently used.
         Activity npcContact = Activity.newBuilder()
                 .withName("Casting npc contact")
-                .addPreReq(() -> EquipmentSlot.NECK.getItem() == null)
+                .addPreReq(() -> Inventory.contains("Giant pouch"))
+                .addPreReq(() -> Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID)
+                .addPreReq(() -> Magic.getSpellBook() == Magic.SPELLBOOK_LUNAR)
+                .addPreReq(() -> Magic.canCast(Spell.Lunar.NPC_CONTACT))
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.interact(Spell.Lunar.NPC_CONTACT, "Dark Mage"))
-                .addSubActivity(Activities.sleepUntil(Dialog::isOpen))
+                .thenSleepUntil(Dialog::isOpen)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
                 .addSubActivity(() -> Dialog.processContinue())
-                .addSubActivity(Activities.sleepWhile(Dialog::isProcessing))
+                .thenSleepWhile(Dialog::isProcessing)
+                .addSubActivity(Activities.stopScriptIf(() ->
+                        Inventory.getFirst("Giant pouch").getId() == DEGRADED_GIANT_POUCH_ID))
                 .withoutPausingBetweenActivities()
                 .build();
 
@@ -756,7 +631,7 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Bank chest") != null)
                 .addPreReq(() -> !Inventory.contains("Pure Essence"))
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll("Steam rune"))
                 .addSubActivity(getStamPot)
                 .addSubActivity(getNecklace)
@@ -777,7 +652,7 @@ public class Runecrafting {
                             .run();
                 })
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll(item -> item.getName().contains("Stamina potion")))
                 .addSubActivity(Activities.depositAll("Vial"))
                 .addSubActivity(Activities.withdrawAll("Pure Essence"))
@@ -791,8 +666,8 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.RING.getItemName().contains("dueling"))
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Duel Arena"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(fireAltar) < 100))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(140)))
+                .thenSleepUntil(() -> Players.getLocal().distance(fireAltar) < 100)
+                .thenPauseFor(Duration.ofMillis(140))
                 .withoutPausingBetweenActivities()
                 .build();
 
@@ -801,7 +676,7 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Mysterious ruins") != null)
                 .addPreReq(() -> Players.getLocal().distance(fireAltar) < 100)
                 .addSubActivity(() -> SceneObjects.getNearest("Mysterious ruins").interact("Enter"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(fireAltarInside) < 100))
+                .thenSleepUntil(() -> Players.getLocal().distance(fireAltarInside) < 100)
                 .withoutPausingBetweenActivities()
                 .build();
 
@@ -810,13 +685,14 @@ public class Runecrafting {
                 .addPreReq(() -> Players.getLocal().distance(fireAltarInside) < 100)
                 .addPreReq(() -> SceneObjects.getNearest("Altar") != null)
                 .addPreReq(() -> Inventory.contains("Pure essence"))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(350)))
+                .addPreReq(() -> Inventory.getCount(true, "Water rune") > 45)
+                .thenPauseFor(Duration.ofMillis(350))
                 .addSubActivity(() -> Inventory.getFirst("Water rune").interact("Use"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Use"))
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.cast(Spell.Lunar.MAGIC_IMBUE))
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
                 .addSubActivity(() -> {
                     Stream.of(Inventory.getItems(item -> item.getName().contains("pouch")))
                             .filter(item -> !item.getName().startsWith("Rune"))
@@ -827,7 +703,7 @@ public class Runecrafting {
                 })
                 .addSubActivity(() -> Inventory.getFirst("Water rune").interact("Use"))
                 .addSubActivity(() -> SceneObjects.getNearest("Altar").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(() -> !Inventory.contains("Pure essence")))
+                .thenSleepUntil(() -> !Inventory.contains("Pure essence"))
                 .build();
 
         Activity goToBank = Activity.newBuilder()
@@ -837,8 +713,8 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.RING.getItemName().contains("dueling"))
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Castle Wars"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(fireAltarInside) > 100))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(210)))
+                .thenSleepUntil(() -> Players.getLocal().distance(fireAltarInside) > 100)
+                .thenPauseFor(Duration.ofMillis(210))
                 .withoutPausingBetweenActivities()
                 .build();
 
@@ -847,6 +723,7 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.HEAD.getItemName().equals("Fire tiara"))
                 .addPreReq(() -> EquipmentSlot.MAINHAND.getItemName().equals("Steam battlestaff"))
                 .addPreReq(() -> Inventory.contains("Rune pouch"))
+                .addPreReq(() -> Inventory.contains("Water rune"))
                 .addSubActivity(Activities.toggleRun())
                 .addSubActivity(npcContact)
                 .addSubActivity(prepareBank)
@@ -868,13 +745,13 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.NECK.getItem() == null)
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.interact(Spell.Lunar.NPC_CONTACT, "Dark Mage"))
-                .addSubActivity(Activities.sleepUntil(Dialog::isOpen))
+                .thenSleepUntil(Dialog::isOpen)
                 .addSubActivity(() -> Dialog.processContinue())
                 .addSubActivity(() -> Dialog.processContinue())
                 .addSubActivity(() -> Dialog.processContinue())
 
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.withdraw("Binding necklace", 1))
                 .addSubActivity(Activities.closeBank())
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
@@ -888,7 +765,7 @@ public class Runecrafting {
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.unequip())
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll("Ring of dueling(1)"))
                 .addSubActivity(Activities.withdraw("Ring of dueling(8)", 1))
                 .addSubActivity(Activities.closeBank())
@@ -901,7 +778,7 @@ public class Runecrafting {
                 .addPreReq(() -> SceneObjects.getNearest("Bank chest") != null)
                 .addPreReq(() -> !Inventory.contains("Pure Essence"))
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.depositAll("Mud rune"))
                 .addSubActivity(Activities.withdraw("Pure Essence", 22))
                 .addSubActivity(Activities.withdraw("Willow logs", 1))
@@ -917,7 +794,7 @@ public class Runecrafting {
                             .run();
                 })
                 .addSubActivity(() -> SceneObjects.getNearest("Bank chest").interact("Use"))
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
+                .thenSleepUntil(Bank::isOpen)
                 .addSubActivity(Activities.withdraw("Pure Essence", 22))
                 .addSubActivity(Activities.closeBank())
                 //.withoutPausingBetweenActivities()
@@ -933,7 +810,7 @@ public class Runecrafting {
                 .withName("Talking to Assistant Marrow to fly the balloon")
                 .addPreReq(() -> Npcs.getNearest("Assistant Marrow") != null)
                 .addSubActivity(() -> Npcs.getNearest("Assistant Marrow").interact("Fly"))
-                .addSubActivity(Activities.sleepUntil(() -> Interfaces.getComponent(469, 18) != null))
+                .thenSleepUntil(() -> Interfaces.getComponent(469, 18) != null)
                 .addSubActivity(handleFlyInterface)
                 .build();
 
@@ -943,8 +820,8 @@ public class Runecrafting {
                 .addPreReq(() -> Players.getLocal().distance(balloonPos) < 100)
                 .addSubActivity(Activities.moveTo(balloonPos))
                 .addSubActivity(flyAction)
-                .addSubActivity(Activities.sleepWhile(() -> Players.getLocal().distance(balloonPos) < 100))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(1000)))
+                .thenSleepWhile(() -> Players.getLocal().distance(balloonPos) < 100)
+                .thenPauseFor(Duration.ofMillis(1000))
                 .build();
 
         Activity enterRunes = Activity.newBuilder()
@@ -954,7 +831,7 @@ public class Runecrafting {
                 .addSubActivity(Activities.switchToTab(Tab.MAGIC))
                 .addSubActivity(() -> Magic.cast(Spell.Lunar.MAGIC_IMBUE))
                 .addSubActivity(Activities.switchToTab(Tab.INVENTORY))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(earthAltar) < 100))
+                .thenSleepUntil(() -> Players.getLocal().distance(earthAltar) < 100)
                 .build();
 
         Activity craftEarthRunes = Activity.newBuilder()
@@ -999,7 +876,7 @@ public class Runecrafting {
                 .addPreReq(() -> EquipmentSlot.RING.getItemName().contains("dueling"))
                 .addSubActivity(Activities.switchToTab(Tab.EQUIPMENT))
                 .addSubActivity(() -> EquipmentSlot.RING.interact("Castle Wars"))
-                .addSubActivity(Activities.sleepUntil(() -> Players.getLocal().distance(earthAltar) > 100))
+                .thenSleepUntil(() -> Players.getLocal().distance(earthAltar) > 100)
                 .build();
 
         return Activity.newBuilder()
@@ -1040,7 +917,7 @@ public class Runecrafting {
                 .addSubActivity(() -> Time.sleepWhile(() -> Inventory.contains("Pure Essence"), 1000 * 10))
 
                 // Pause in case a level up dialog appears
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
+                .thenPauseFor(Duration.ofSeconds(2))
                 .addSubActivity(() -> SceneObjects.getNearest("Portal").interact("Use"))
                 .addSubActivity(() -> Time.sleepUntil(() -> Players.getLocal().getY() < 4000, 1000 * 10))
 

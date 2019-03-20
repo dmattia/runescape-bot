@@ -1,5 +1,4 @@
 import misc.Kitten;
-import org.rspeer.runetek.api.component.tab.Spell;
 import skills.*;
 import util.common.Activity;
 import util.common.ActivitySelectorModel;
@@ -21,6 +20,10 @@ public class MainActivitySelectorModel extends ActivitySelectorModel {
         put("Hunt for spices with cat", Kitten.huntForSpices());
         put("Thieve master gardener", Thieving.masterGardner());
         put("Pest Control", Combat.pestControl());
+        put("Zulrah", Combat.zulrah());
+        put("Ensouled Heads", Prayer.ensouledHeads());
+        put("Smith", Smithing.smith());
+        put("Birdhouse run", Hunter.birdhouseRun());
     }};
 
     @Override

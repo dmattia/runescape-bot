@@ -1,10 +1,12 @@
 package util;
 
+import org.rspeer.runetek.adapter.Positionable;
 import org.rspeer.runetek.adapter.component.Item;
 import org.rspeer.runetek.adapter.scene.Pickable;
 import org.rspeer.runetek.api.Game;
 import org.rspeer.runetek.api.Varps;
 import org.rspeer.runetek.api.commons.BankLocation;
+import org.rspeer.runetek.api.commons.Identifiable;
 import org.rspeer.runetek.api.commons.Time;
 import org.rspeer.runetek.api.component.Bank;
 import org.rspeer.runetek.api.component.Interfaces;
@@ -14,10 +16,8 @@ import org.rspeer.runetek.api.component.tab.*;
 import org.rspeer.runetek.api.movement.Movement;
 import org.rspeer.runetek.api.movement.position.Area;
 import org.rspeer.runetek.api.movement.position.Position;
-import org.rspeer.runetek.api.scene.Npcs;
-import org.rspeer.runetek.api.scene.Pickables;
-import org.rspeer.runetek.api.scene.Players;
-import org.rspeer.runetek.api.scene.SceneObjects;
+import org.rspeer.runetek.api.movement.transportation.FairyRing;
+import org.rspeer.runetek.api.scene.*;
 import org.rspeer.runetek.event.listeners.WorldChangeListener;
 import org.rspeer.ui.Log;
 import trade.PriceSummary;
@@ -51,7 +51,7 @@ public class Activities {
                 .withName("Switching to tab: " + tab.toString())
                 .addPreReq(() -> !Tabs.isOpen(tab))
                 .addSubActivity(() -> Tabs.open(tab))
-                .addSubActivity(Activities.sleepUntil(() -> Tabs.isOpen(tab)))
+                .thenSleepUntil(() -> Tabs.isOpen(tab))
                 .build();
     }
 
@@ -65,24 +65,57 @@ public class Activities {
                 .build();
     }
 
-    public static Activity moveToExactly(Position position) {
+    public static Activity moveToExactly(Positionable position) {
         return Activity.newBuilder()
-                .withName("Moving to the exact position: " + position)
                 .addPreReq(() -> Players.getLocal().distance(position) < 100)
                 .addSubActivity(() -> (Movement.setWalkFlag(position)))
-                .addSubActivity(Activities.sleepWhile(Movement::isDestinationSet))
+                .thenSleepWhile(Movement::isDestinationSet)
                 .build();
     }
 
     public static Activity moveTo(Position position) {
         return Activity.newBuilder()
-                .withName("Moving to position: " + position)
                 .addPreReq(() -> position.distance(Players.getLocal()) > 5)
                 .addSubActivity(toggleRun())
                 .addSubActivity(() -> Movement.walkTo(position))
-                .addSubActivity(Activities.sleepUntil(() -> !Movement.isDestinationSet() ||
-                        Movement.getDestination().distance() < 4))
+                .thenSleepUntil(() -> !Movement.isDestinationSet() ||
+                        Movement.getDestination().distance() < 4)
                 .untilPreconditionsFail()
+                .build();
+    }
+
+    public static Activity useHouseFairyRing(FairyRing.Destination dest) {
+        String quickAction = String.format("Last-Destination (%s)", dest.getCode());
+
+        Activity useFairyRingSlowly = Activity.newBuilder()
+                .addPreReq(House::isInside)
+                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
+                .addPreReq(() -> !SceneObjects.getNearest("Fairy ring").containsAction(quickAction))
+                .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact("Configure"))
+                .thenSleepUntil(FairyRing::isInterfaceOpen)
+                .addSubActivity(() -> FairyRing.enterCode(dest))
+                .addSubActivity(() -> FairyRing.confirm())
+                .thenSleepUntil(() -> !House.isInside())
+                .tick()
+                .build();
+
+        Activity useFairyRingQuickly = Activity.newBuilder()
+                .addPreReq(House::isInside)
+                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
+                .addPreReq(() -> SceneObjects.getNearest("Fairy ring").containsAction(quickAction))
+                .addSubActivity(() -> SceneObjects.getNearest("Fairy ring").interact(quickAction))
+                .thenSleepUntil(() -> !House.isInside())
+                .tick()
+                .build();
+
+        return Activity.newBuilder()
+                .withName("Taking fairy ring to " + dest.getCode() + " with description: " + dest.getDescription())
+                .addPreReq(House::isInside)
+                .addPreReq(() -> SceneObjects.getNearest("Fairy ring") != null)
+                .addPreReq(() -> !FairyRing.getNearest().equals(dest))
+                .addSubActivity(useFairyRingSlowly)
+                .addSubActivity(useFairyRingQuickly)
+                .withoutPausingBetweenActivities()
                 .build();
     }
 
@@ -122,7 +155,7 @@ public class Activities {
                 .withName("using item")
                 .addPreReq(() -> Inventory.contains(predicate))
                 .addSubActivity(() -> Inventory.getFirst(predicate).interact("Use"))
-                .addSubActivity(pauseFor(Duration.ofMillis(100)))
+                .thenPauseFor(Duration.ofMillis(100))
                 .onlyOnce()
                 .build();
     }
@@ -153,25 +186,24 @@ public class Activities {
                 .withName("Deselecting item")
                 .addPreReq(Inventory::isItemSelected)
                 .addSubActivity(() -> Inventory.deselectItem())
-                .addSubActivity(Activities.sleepWhile(Inventory::isItemSelected))
+                .thenSleepWhile(Inventory::isItemSelected)
                 .onlyOnce()
                 .build();
     }
 
     public static Activity hopWorlds() {
+        Activity openWorldSwitcher = Activity.newBuilder()
+                .withName("Opening world switcher")
+                .addPreReq(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")) != null)
+                .addSubActivity(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")).interact("World Switcher"))
+                .thenPauseFor(Duration.ofMillis(582))
+                .build();
+
         return Activity.newBuilder()
                 .withName("Hopping worlds")
                 .addSubActivity(() -> Tabs.open(Tab.LOGOUT))
-                .addSubActivity(Activities.sleepUntil(() -> Tabs.isOpen(Tab.LOGOUT)))
-                .addSubActivity(
-                        Activity.newBuilder()
-                                .withName("Opening world switcher")
-                                .addPreReq(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")) != null)
-                                .addSubActivity(() -> Interfaces.firstByAction(action -> action.equalsIgnoreCase("World Switcher")).interact("World Switcher"))
-                                .addSubActivity(pauseFor(Duration.ofMillis(582)))
-                                .onlyOnce()
-                                .build()
-                )
+                .thenSleepUntil(() -> Tabs.isOpen(Tab.LOGOUT))
+                .addSubActivity(openWorldSwitcher)
                 .addSubActivity(() -> WorldHopper.hopNext(Predicates::worldIsSafe))
                 .addSubActivity(() -> {
                     AtomicBoolean complete = new AtomicBoolean(false);
@@ -181,18 +213,7 @@ public class Activities {
                     Time.sleepUntil(() -> complete.get(), 286, 1000 * 10);
                     Game.getEventDispatcher().deregister(listener);
                 })
-                .addSubActivity(pauseFor(Duration.ofSeconds(3)))
-                .build();
-    }
-
-
-    /**
-     * Sleeps for a duration, roughly. To keep Jagex on its toes, the actual duration waited for is randomly between
-     * the input duration and 20% longer than that duration.
-     */
-    public static Activity pauseFor(Duration duration) {
-        return Activity.newBuilder()
-                .addSubActivity(() -> Time.sleep(duration.toMillis(), duration.toMillis() * 120 / 100))
+                .thenPauseFor(Duration.ofSeconds(3))
                 .build();
     }
 
@@ -224,8 +245,7 @@ public class Activities {
                             break;
                     }
                 })
-                .addSubActivity(Activities.sleepUntil(Bank::isOpen))
-                .onlyOnce()
+                .thenSleepUntil(Bank::isOpen)
                 .build();
     }
 
@@ -237,8 +257,7 @@ public class Activities {
                 .withName("Closing bank")
                 .addPreReq(Bank::isOpen)
                 .addSubActivity(() -> Bank.close())
-                .addSubActivity(Activities.sleepWhile(Bank::isOpen))
-                .onlyOnce()
+                .thenSleepWhile(Bank::isOpen)
                 .build();
     }
 
@@ -269,8 +288,7 @@ public class Activities {
                 .withName("Depositing all items")
                 .addPreReq(() -> !Inventory.isEmpty())
                 .addSubActivity(() -> Bank.depositInventory())
-                .addSubActivity(pauseFor(Duration.ofMillis(300)))
-                .onlyOnce()
+                .thenPauseFor(Duration.ofMillis(300))
                 .build()
                 .addPreActivity(openBank());
     }
@@ -280,8 +298,7 @@ public class Activities {
                 .withName("Depositing all worn items")
                 .addPreReq(() -> Equipment.getOccupiedSlots().length > 0)
                 .addSubActivity(() -> Bank.depositEquipment())
-                .addSubActivity(pauseFor(Duration.ofMillis(300)))
-                .onlyOnce()
+                .thenPauseFor(Duration.ofMillis(300))
                 .build()
                 .addPreActivity(openBank());
     }
@@ -297,9 +314,9 @@ public class Activities {
         return Activity.newBuilder()
                 .addPreReq(Bank::isOpen)
                 .addPreReq(() -> Inventory.contains(predicate))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
+                .thenPauseFor(Duration.ofMillis(110))
                 .addSubActivity(() -> Bank.depositAll(predicate))
-                .addSubActivity(Activities.sleepWhile(() -> Inventory.contains(predicate)))
+                .thenSleepWhile(() -> Inventory.contains(predicate))
                 .withoutPausingBetweenActivities()
                 .onlyOnce()
                 .build();
@@ -312,6 +329,34 @@ public class Activities {
                 .build()
                 .addPreActivity(depositInventory())
                 .andThen(closeBank());
+    }
+
+    public static Activity pray(Prayer prayer) {
+        return Activity.newBuilder()
+                .addPreReq(() -> Prayers.isUnlocked(prayer))
+                .addPreReq(() -> Prayers.getPoints() > 0)
+                .addPreReq(() -> !Prayers.isActive(prayer))
+                .addSubActivity(switchToTab(Tab.PRAYER))
+                .addSubActivity(() -> Prayers.toggle(true, prayer))
+                .build();
+    }
+
+    public static Activity unpray(Prayer prayer) {
+        return Activity.newBuilder()
+                .addPreReq(() -> Prayers.isActive(prayer))
+                .addSubActivity(switchToTab(Tab.PRAYER))
+                .addSubActivity(() -> Prayers.toggle(false, prayer))
+                .build();
+    }
+
+    public static Activity turnOffAllPrayers() {
+        return Activity.of(() -> Arrays.stream(Prayers.getActive())
+                .map(prayer -> Activities.unpray(prayer))
+                .collect(new ActivityCollector())
+                .addPreReq(House::isInside)
+                .withName("Turning off all prayers")
+                .build()
+                .run());
     }
 
     /**
@@ -336,11 +381,11 @@ public class Activities {
     public static Activity withdrawAll(Predicate<Item> predicate) {
         return Activity.newBuilder()
                 .addPreReq(Bank::isOpen)
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
+                .thenPauseFor(Duration.ofMillis(110))
                 .addSubActivity(() -> {
                     int currentAmount = Inventory.getCount(true, predicate);
                     Bank.withdrawAll(predicate);
-                    Activities.sleepUntil(() -> Inventory.getCount(true, predicate) > currentAmount).run();
+                    Time.sleepUntil(() -> Inventory.getCount(true, predicate) > currentAmount, 2000);
                 })
                 .withoutPausingBetweenActivities()
                 .build();
@@ -349,33 +394,18 @@ public class Activities {
     public static Activity withdraw(Predicate<Item> predicate, int amount) {
         return Activity.newBuilder()
                 .addPreReq(Bank::isOpen)
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(110)))
+                .thenPauseFor(Duration.ofMillis(110))
                 .addSubActivity(() -> Bank.withdraw(predicate, amount))
-                .addSubActivity(Activities.sleepUntil(() -> Inventory.getCount(true, predicate) >= amount))
+                .thenSleepUntil(() -> Inventory.getCount(true, predicate) >= amount)
                 .withoutPausingBetweenActivities()
                 .build();
-                //.andThen(stopScriptIf(() -> Inventory.getCount(true, predicate) < amount));
     }
 
     public static Activity stopScriptIf(BooleanSupplier condition) {
         return Activity.newBuilder()
                 .addPreReq(condition)
-                //.addSubActivity(() -> Globals.script.setStopping(true))
+                .addSubActivity(() -> Globals.script.setStopping(true))
                 .build();
-    }
-
-    public static Activity sleepWhile(BooleanSupplier condition) {
-        return Activity.newBuilder()
-                .addPreReq(condition)
-                .addSubActivity(pauseFor(Duration.ofMillis(50)))
-                .maximumDuration(Duration.ofMinutes(2))
-                .untilPreconditionsFail()
-                .build()
-                .andThen(stopScriptIf(condition));
-    }
-
-    public static Activity sleepUntil(BooleanSupplier condition) {
-        return sleepWhile(Predicates.not(condition));
     }
 
     /**
@@ -384,7 +414,7 @@ public class Activities {
      */
     public static Activity produceAll(String item) {
         Activity waitForProductionToOpen = Activity.newBuilder()
-                .addSubActivity(Activities.sleepUntil(Production::isOpen))
+                .thenSleepUntil(Production::isOpen)
                 .build();
 
         return Activity.newBuilder()
@@ -393,7 +423,7 @@ public class Activities {
                 .addSubActivity(() -> Production.setAmount(Production.Amount.ALL))
                 .addSubActivity(() -> Production.initiate(item))
                 .addSubActivity(() -> Production.initiate())
-                .addSubActivity(pauseFor(Duration.ofSeconds(1)))
+                .thenPauseFor(Duration.ofSeconds(1))
                 .build()
                 .addPreActivity(waitForProductionToOpen);
     }
@@ -422,8 +452,9 @@ public class Activities {
         return Activity.newBuilder()
                 .addPreReq(() -> !Equipment.contains(item))
                 .addPreReq(() -> Inventory.contains(item))
+                .addSubActivity(switchToTab(Tab.INVENTORY))
                 .addSubActivity(() -> Inventory.getFirst(item).click())
-                .addSubActivity(Activities.sleepUntil(() -> Equipment.contains(item)))
+                .thenSleepUntil(() -> Equipment.contains(item))
                 .build();
     }
 
@@ -485,13 +516,19 @@ public class Activities {
      * Picks up an item off the ground, assuming it is already present or will be within 5 seconds.
      */
     public static Activity pickup(String itemName) {
+        Predicate<Identifiable> itemPredicate = item -> item.getName().contains(itemName);
+
         return Activity.newBuilder()
                 .withName("Picking up " + itemName)
-                .addPreReq(() -> Pickables.getNearest(item -> item.getName().contains(itemName)) != null && !Inventory.isFull())
+                .addPreReq(() -> Pickables.getNearest(itemPredicate) != null)
+                .addPreReq(Predicates.not(Inventory::isFull))
                 .addSubActivity(() -> {
-                    int count = Inventory.getCount(item -> item.getName().contains(itemName));
-                    Pickables.getNearest(item -> item.getName().contains(itemName)).interact("Take");
-                    Activities.sleepUntil(() -> Inventory.getCount(item -> item.getName().contains(itemName)) > count).run();
+                    int count = Inventory.getCount(true, itemPredicate);
+                    Pickables.getNearest(itemPredicate).interact("Take");
+                    Activity.newBuilder()
+                            .sleepUntil(() -> Inventory.getCount(true, itemPredicate) > count)
+                            .build()
+                            .run();
                 })
                 .onlyOnce()
                 .build();

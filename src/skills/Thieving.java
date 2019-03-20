@@ -35,7 +35,7 @@ public class Thieving {
                             .orElse(false);
                 }, 120, 1000 * 10))
                 .addSubActivity(() -> SceneObjects.getNearest("Tea stall").interact("Steal-from"))
-                .addSubActivity(Activities.pauseFor(Duration.ofMillis(546)))
+                .tick()
                 .addSubActivity(Activities.dropAll("Cup of tea"))
                 .untilPreconditionsFail()
                 .build();
@@ -89,8 +89,8 @@ public class Thieving {
                 .addSubActivity(getSharksIfNeeded)
                 .addSubActivity(healIfNeeded)
                 .addSubActivity(() -> Npcs.getNearest("Master Farmer").interact("Pickpocket"))
-                .addSubActivity(Activities.pauseFor(Duration.ofSeconds(2)))
-                .addSubActivity(Activities.sleepWhile(() -> Players.getLocal().isAnimating()))
+                .thenPauseFor(Duration.ofSeconds(2))
+                .thenSleepWhile(() -> Players.getLocal().isAnimating())
                 .addSubActivity(Activities.dropAll(badSeed))
                 .build();
     }

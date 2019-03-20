@@ -1,19 +1,21 @@
 package util.common;
 
-import org.rspeer.runetek.adapter.scene.Npc;
-import org.rspeer.runetek.adapter.scene.SceneObject;
 import org.rspeer.runetek.api.Game;
 import org.rspeer.runetek.api.commons.StopWatch;
 import org.rspeer.runetek.api.commons.Time;
+import org.rspeer.runetek.api.movement.position.Area;
+import org.rspeer.runetek.api.movement.position.Position;
+import org.rspeer.runetek.api.scene.Players;
+import util.Activities;
 import util.Globals;
 import org.rspeer.ui.Log;
+import util.Predicates;
 
 import java.time.Duration;
 import java.util.*;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -21,9 +23,9 @@ import java.util.stream.Collectors;
  * In addition to making some in game action, activities can also specify their lifespans, conditions to run, and
  * relationships to other activities.
  * <p>
- * A single activity is not thread safe, and should only ever be performed once at a time.
- * <p>
- * TODO(dmattia): It should be possible to specify that an activity randomly selects from a set of activities.
+ * A single activity is not thread safe, and should only ever be performed once at a time. If multiple threads want
+ * to form activities, use a thread-safe queue to queue up activities and then on the main thread have an activity that
+ * just pops of activities and runs them.
  */
 public class Activity implements Runnable {
     private final List<BooleanSupplier> preConditions;
@@ -32,28 +34,36 @@ public class Activity implements Runnable {
     private int iteration;
     private Optional<String> name;
     private Optional<Activity> parent;
-    private boolean pauseBetweenActivities;
+    private long pauseMillis;
     private Optional<ActivityConfigModel> configModel;
 
     // private because you should only create activities through Activity.newBuilder()...build().
     private Activity(List<BooleanSupplier> preConditions,
                      List<Runnable> activities,
                      Optional<String> name,
-                     boolean pauseBetweenActivities,
+                     long pauseMillis,
                      Optional<ActivityConfigModel> configModel) {
+        // Pass down context information to any child activities
+        activities = activities.stream()
+                .map(runnable -> {
+                    if (!Activity.class.isInstance(runnable)) {
+                        return runnable;
+                    }
+
+                    Activity activity = Activity.class.cast(runnable);
+                    activity.setParent(this);
+                    return activity;
+                })
+                .collect(Collectors.toList());
+
         this.preConditions = preConditions;
         this.activities = activities;
         this.stopWatch = StopWatch.start();
         this.iteration = 1;
         this.name = name;
         this.parent = Optional.empty();
-        this.pauseBetweenActivities = pauseBetweenActivities;
+        this.pauseMillis = pauseMillis;
         this.configModel = configModel;
-
-        activities.stream()
-                .filter(Activity.class::isInstance)
-                .map(Activity.class::cast)
-                .map(child -> child.setParent(this));
     }
 
     private Activity setParent(Activity parent) {
@@ -61,8 +71,12 @@ public class Activity implements Runnable {
         return this;
     }
 
+    /**
+     * Finds the nearest parent that has a config model, returning it.
+     */
     public Optional<ActivityConfigModel> getConfigModel() {
-        return configModel;
+        if (configModel.isPresent()) return configModel;
+        return parent.flatMap(Activity::getConfigModel);
     }
 
     /**
@@ -107,7 +121,7 @@ public class Activity implements Runnable {
 
                 if (i == activities.size() - 1) continue;
                 if (Activity.class.isInstance(runnable) && Activity.class.cast(runnable).iteration <= 1) continue;
-                if (pauseBetweenActivities) Time.sleep(333, 666);
+                Time.sleep(pauseMillis, 2 * pauseMillis + 1);
             }
 
             ++iteration;
@@ -147,8 +161,8 @@ public class Activity implements Runnable {
         private int maxIterations;
         private Duration maxDuration;
         private Optional<String> name;
-        private boolean pauseBetweenActivities;
         private Optional<ActivityConfigModel> configModel;
+        private long pauseMillis; // Pause between activities will be [pauseMillis, 2 * pauseMillis]
 
         Builder() {
             this.preConditions = new ArrayList<>();
@@ -156,15 +170,15 @@ public class Activity implements Runnable {
             this.maxIterations = 1;
             this.maxDuration = Duration.ofHours(6);
             this.name = Optional.empty();
-            this.pauseBetweenActivities = true;
             this.configModel = Optional.empty();
+            this.pauseMillis = 333;
         }
 
         /**
          * Builds the completed, immutable Activiity object.
          */
         public Activity build() {
-            Activity activity = new Activity(preConditions, activities, name, pauseBetweenActivities, configModel);
+            Activity activity = new Activity(preConditions, activities, name, pauseMillis, configModel);
 
             activity.preConditions.add(() -> !activity.stopWatch.exceeds(maxDuration));
             activity.preConditions.add(() -> activity.iteration <= maxIterations);
@@ -184,6 +198,9 @@ public class Activity implements Runnable {
             return this;
         }
 
+        /**
+         * Adds a subactivity, taking in a keval set of params set in the GUI.
+         */
         public Builder addSubActivity(Consumer<Map<String, String>> function) {
             activities.add(() -> {
                 Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
@@ -192,16 +209,10 @@ public class Activity implements Runnable {
             return this;
         }
 
-        /*
-        public Builder addSubActivity(Function<Map<String, String>, Activity> function) {
-            activities.add(() -> {
-                Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
-                function.apply(map).run();
-            });
-            return this;
-        }
-        */
-
+        /**
+         * A config model specifies how the UI will appear to a user under their selected activity. This only makes
+         * sense to set on a top level activity, as that is what determines the GUI options.
+         */
         public Builder withConfigModel(ActivityConfigModel configModel) {
             this.configModel = Optional.of(configModel);
             return this;
@@ -215,20 +226,32 @@ public class Activity implements Runnable {
             return this;
         }
 
-        public Builder withoutPausingBetweenActivities() {
-            this.pauseBetweenActivities = false;
+        public Builder withPauseOf(Duration duration) {
+            this.pauseMillis = duration.toMillis();
             return this;
         }
 
         /**
+         * Removes the ~1 tick pause between sub-activities. This should only be used in cases where speed is of the
+         * top importance (think prayer switches, repeated clicks on a single object, etc.) where it could be assumed
+         * a player could theoretically perform the actions without pauses. As a rule of thumb, if its a common thing
+         * people use hotkeys for, its probably good to use this method for it.
+         */
+        public Builder withoutPausingBetweenActivities() {
+            return withPauseOf(Duration.ofMillis(0));
+        }
+
+        /**
          * Actions will continue to occur some prereq added by this method is false.
-         * TODO(dmattia): This needs a better name, as it is an OR'd check between every iteration, not just an initial check.
          */
         public Builder addPreReq(BooleanSupplier condition) {
             preConditions.add(condition);
             return this;
         }
 
+        /**
+         * Adds a prereq, taking in config information a user specified in the GUI.
+         */
         public Builder addPreReq(Function<Map<String, String>, Boolean> function) {
             preConditions.add(() -> {
                 Map<String, String> map = configModel.map(model -> model.keyValStore).orElse(new HashMap<>());
@@ -256,6 +279,76 @@ public class Activity implements Runnable {
         public Builder maximumTimes(int count) {
             maxIterations = count;
             return this;
+        }
+
+        /**
+         * Adds an activity to pause for ~600ms.
+         */
+        public Builder tick() {
+            return addSubActivity(() -> Time.sleep(600, 614));
+        }
+
+        public Builder onlyIfAtPosition(Position pos) {
+            return addPreReq(() -> Players.getLocal().getPosition().equals(pos));
+        }
+
+        public Builder onlyIfInArea(Area area) {
+            return addPreReq(() -> area.contains(Players.getLocal().getPosition()));
+        }
+
+        public Builder completeAnimation() {
+            sleepUntil(() -> Players.getLocal().isAnimating());
+            return sleepUntil(() -> Players.getLocal().isAnimating());
+        }
+
+        public Builder thenSleepWhile(BooleanSupplier condition) {
+            return thenSleepWhile(condition, Duration.ofMinutes(2));
+        }
+
+        public Builder thenSleepWhile(BooleanSupplier condition, Duration maxDuration) {
+            return addSubActivity(Activity.newBuilder()
+                    .addPreReq(condition)
+                    .addSubActivity(() -> Time.sleep(50, 55))
+                    .maximumDuration(maxDuration)
+                    .untilPreconditionsFail()
+                    .build());
+                    // .andThen(Activities.stopScriptIf(condition)));
+        }
+
+        public Builder thenSleepUntil(BooleanSupplier condition, Duration maxDuration) {
+            return thenSleepWhile(Predicates.not(condition), maxDuration);
+        }
+
+        /**
+         * Another name for `thenSleepUntil`.
+         */
+        public Builder sleepUntil(BooleanSupplier condition) {
+            return thenSleepUntil(condition);
+        }
+
+        /**
+         * Waits for up to 2 minutes for a condition to become true, checking every ~50 ms. If the condition is not
+         * true after 2 minutes, the program will termin8.
+         */
+        public Builder thenSleepUntil(BooleanSupplier condition) {
+            return thenSleepUntil(condition, Duration.ofMinutes(2));
+        }
+
+        /**
+         * Another name for `thenPauseFor`
+         */
+        public Builder pauseFor(Duration duration) {
+            return thenPauseFor(duration);
+        }
+
+        /**
+         * Sleeps for a duration, roughly. To keep Jagex on its toes, the actual duration waited for is randomly between
+         * the input duration and 20% longer than that duration.
+         */
+        public Builder thenPauseFor(Duration duration) {
+            return addSubActivity(Activity.newBuilder()
+                    .addSubActivity(() -> Time.sleep(duration.toMillis(), duration.toMillis() * 120 / 100))
+                    .build());
         }
 
         /**
